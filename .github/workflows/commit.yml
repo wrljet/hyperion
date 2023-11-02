@@ -114,7 +114,7 @@ jobs:
         # uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{secrets.GITHUB_TOKEN}}"
-          automatic_release_tag: "latest"
+          automatic_release_tag: "develop"
           prerelease: true
           title: "${{env.TITLE}} ${{github.ref_name}}"
           files: |
@@ -175,3 +175,21 @@ jobs:
       - name: Foo
         run: |
           echo 'Building on Windows Not Implemented Yet'
+          echo '$psversiontable...'
+          $psversiontable
+          # echo 'get-computerinfo...'
+          # get-computerinfo
+          echo "GITHUB_WORKSPACE: $env:GITHUB_WORKSPACE"
+
+      - name: Checkout
+        uses: actions/checkout@v3.3.0
+
+      - name: Get Commit Ref
+        run: |
+          echo "GITHUB_WORKSPACE: $env:GITHUB_WORKSPACE"
+          dir
+          git rev-parse --short $env:GITHUB_SHA
+          $env:COMMIT_REF = (git rev-parse --short $env:GITHUB_SHA)
+          echo "COMMIT_REF: $env:COMMIT_REF"
+          # echo "COMMIT_REF=$COMMIT_REF" >>$GITHUB_ENV
+
