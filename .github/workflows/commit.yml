@@ -95,12 +95,16 @@ jobs:
 
       - name: Create Release Archive
         run: |
+          pwd
+          _dynamic_version
+          echo $VERSION
+          #
           echo "SDL-Hyperion-${{github.ref_name}}-${{env.COMMIT_REF}}-Ubuntu.tar.gz"
           tar cfz SDL-Hyperion-${{github.ref_name}}-${{env.COMMIT_REF}}-Ubuntu.tar.gz /usr/local/hercules
 
       - name: Set Title
         run: |
-          echo "Tag: ${{github.ref_name}}"
+          echo "Tag: latest-${{github.ref_name}}"
           if grep -q "develop" <<< "${{github.ref_name}}"; then
             TITLE="SDL-Hyperion Development Snapshot"
           else
@@ -116,7 +120,7 @@ jobs:
           repo_token: "${{secrets.GITHUB_TOKEN}}"
           automatic_release_tag: "develop"
           prerelease: true
-          title: "${{env.TITLE}} ${{github.ref_name}}"
+          title: "${{env.TITLE}} latest-${{github.ref_name}}"
           files: |
             SDL-Hyperion-${{github.ref_name}}-${{env.COMMIT_REF}}-Ubuntu.tar.gz
 
@@ -172,13 +176,14 @@ jobs:
     runs-on: windows-2022 # Windows Server 2022
 
     steps:
-      - name: Foo
+      - name: Build System Info
         run: |
           echo 'Building on Windows Not Implemented Yet'
           echo '$psversiontable...'
           $psversiontable
-          # echo 'get-computerinfo...'
-          # get-computerinfo
+          echo 'get-computerinfo...'
+          get-computerinfo
+          echo "---"
           echo "GITHUB_WORKSPACE: $env:GITHUB_WORKSPACE"
 
       - name: Checkout
@@ -187,9 +192,142 @@ jobs:
       - name: Get Commit Ref
         run: |
           echo "GITHUB_WORKSPACE: $env:GITHUB_WORKSPACE"
-          dir
-          git rev-parse --short $env:GITHUB_SHA
+          #
+          # git rev-parse --short $env:GITHUB_SHA
           $env:COMMIT_REF = (git rev-parse --short $env:GITHUB_SHA)
           echo "COMMIT_REF: $env:COMMIT_REF"
-          # echo "COMMIT_REF=$COMMIT_REF" >>$GITHUB_ENV
+          echo "COMMIT_REF=$env:COMMIT_REF" >>$env:GITHUB_ENV
+          #
 
+      - name: Git Clones
+        run: |
+          pushd ..
+            dir
+            git clone https://github.com/wrljet/hercules-helper-windows.git
+            git clone -b develop https://github.com/SDL-Hercules-390/hyperion.git
+            dir
+            mkdir hyperion\winbuild
+            cd hyperion\winbuild
+            #
+            $ZIPFILE = "ZLIB1-1.2.11-bin-lib-inc-vc2008-x86-x64.zip"
+            $URL = "http://www.softdevlabs.com/downloads/$ZIPFILE"
+            $OutFile = "$ZIPFILE"
+            Invoke-WebRequest -URI $URL -OutFile $OutFile
+            Expand-Archive -Path $ZIPFILE -DestinationPath "zlib"
+            #
+            $ZIPFILE ="BZIP2-1.0.6-bin-lib-inc-vc2008-x86-x64.zip"
+            $URL = "http://www.softdevlabs.com/downloads/$ZIPFILE"
+            $OutFile = "$ZIPFILE"
+            Invoke-WebRequest -URI $URL -OutFile $OutFile
+            Expand-Archive -Path $ZIPFILE -DestinationPath "bzip2"
+            #
+            $ZIPFILE = "PCRE-6.4.1-bin-lib-inc-vc2008-x86-x64.zip"
+            $URL = "http://www.softdevlabs.com/downloads/$ZIPFILE"
+            $OutFile = "$ZIPFILE"
+            Invoke-WebRequest -URI $URL -OutFile $OutFile
+            Expand-Archive -Path $ZIPFILE -DestinationPath "pcre"
+            #
+            # D:\a\sandbox\hyperion\winbuild
+            dir
+            #
+          popd
+          dir
+
+
+      - name: Command Shell
+        shell: cmd
+        run: |
+          dir
+          dir ..
+          echo GITHUB_SHA: %GITHUB_SHA%
+          set "git_hash=-gHHHHHHH"
+          for /f %%a in ('git rev-parse --short HEAD') do set "COMMIT_REF=%%a"
+          echo GIT_HASH: %COMMIT_REF%
+          ::
+          pushd ..
+            dir
+          ::
+            rem dir "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build"
+          ::
+            set HERCULES_HELPER_BUILD_DIR=%cd%\hyperion
+            echo HERCULES_HELPER_BUILD_DIR: %HERCULES_HELPER_BUILD_DIR%
+          ::
+            set HERCULES_HELPER_VCVARS_CMD=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat
+          ::
+            pushd "%HERCULES_HELPER_BUILD_DIR%"
+              set HERCULES_BUILD_DIR=%cd%\msvc.AMD64.bin
+              call "%HERCULES_HELPER_VCVARS_CMD%"
+              :: set /P dummy=
+              ::
+              call _dynamic_version.cmd
+              :: Remove double quotes from Fish's version string
+              set VERSION=%VERSION:"=%
+              set VERSION=%VERSION: =%
+              echo Build version info: %VERSION%
+              echo %VERSION% > ..\DYNAMIC_VERSION
+              ::
+              call makefile.bat RETAIL-X64 makefile.msvc 8 -title "*** GitHub Actions Build ***" -a
+            popd
+          popd
+
+      - name: Create Release Archive
+        run: |
+          echo "COMMIT_REF: $env:COMMIT_REF"
+          #
+          $env:DYNAMIC_VERSION = (Get-Content "../DYNAMIC_VERSION").Trim()
+          echo "DYNAMIC_VERSION: $env:DYNAMIC_VERSION"
+          echo "DYNAMIC_VERSION=$env:DYNAMIC_VERSION" >>$env:GITHUB_ENV
+          #
+          $env:ZIPFILE="Hercules-$env:DYNAMIC_VERSION-x64.zip"
+          echo "ZIPFILE=$env:ZIPFILE" >>$env:GITHUB_ENV
+          echo $env:ZIPFILE
+          dir
+          echo " "
+          echo "dir .. before zip"
+          dir ..
+          pushd ..
+            # Create a zip file with the contents of msvc.AMD64.bin
+            Compress-Archive -Path hyperion\msvc.AMD64.bin\*.* -DestinationPath "sandbox\$env:ZIPFILE"
+            echo "dir .. after zip"
+            dir
+          popd
+
+      - name: Set Title
+        run: |
+          echo "Tag: latest-${{github.ref_name}}"
+          # if grep -q "develop" <<< "${{github.ref_name}}"; then
+            $env:TITLE="SDL-Hyperion Development Snapshot"
+          # else
+          #  $env:TITLE="SDL-Hyperion"
+          # fi
+          echo "Title: $env:TITLE"
+          echo "TITLE=$env:TITLE" >>$env:GITHUB_ENV
+          dir
+          echo "dir .."
+          dir ..
+
+      - name: Upload build
+        uses: actions/upload-artifact@v2
+        with:
+          path: "${{env.ZIPFILE}}"
+          name: "release.zips"
+
+      - name: Download binaries
+        uses: actions/download-artifact@v2
+
+      - name: Review binaries
+        run: |
+          dir
+          dir release.zips
+
+      - name: Attach Release Archive
+        uses: wrljet/actions/packages/automatic-releases@built-packages
+        with:
+          repo_token: "${{secrets.GITHUB_TOKEN}}"
+          automatic_release_tag: "latest-${{github.ref_name}}"
+          prerelease: true
+          title: "${{env.TITLE}} ${{github.ref_name}}"
+          files: |
+            release.zips
+
+### END ###
