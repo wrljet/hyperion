@@ -98,10 +98,13 @@ jobs:
           pwd
           ./_dynamic_version
           # Remove double quotes from Fish's version string
+          echo "VERSION (original): $VERSION"
           VERSION="${VERSION%\"}"
+          echo "VERSION (quotes1): $VERSION"
           VERSION="${VERSION#\"}"
+          echo "VERSION (quotes2: $VERSION"
           VERSION="${VERSION//[[:space:]]/}"
-          echo "VERSION: $VERSION"
+          echo "VERSION (spaces): $VERSION"
           #
           echo "Hercules-${{github.ref_name}}-${{env.COMMIT_REF}}-Ubuntu-x64.tar.gz"
           tar cfz Hercules-${{github.ref_name}}-${{env.COMMIT_REF}}-Ubuntu-x64.tar.gz /usr/local/hercules
@@ -126,7 +129,7 @@ jobs:
           prerelease: true
           title: "${{env.TITLE}} latest-${{github.ref_name}}"
           files: |
-            SDL-Hyperion-${{github.ref_name}}-${{env.COMMIT_REF}}-Ubuntu.tar.gz
+            SDL-Hyperion-${{github.ref_name}}-${{env.COMMIT_REF}}-Ubuntu-x64.tar.gz
 
 ############
 
