@@ -96,8 +96,8 @@ jobs:
       - name: Create Release Archive
         run: |
           pwd
-          ./_dynamic_version
-          # Remove double quotes from Fish's version string
+          VERSION=$(./_dynamic_version)
+          # Remove double quotes and spaces from Fish's version string
           echo "VERSION (original): $VERSION"
           VERSION="${VERSION%\"}"
           echo "VERSION (quotes1): $VERSION"
@@ -129,7 +129,7 @@ jobs:
           prerelease: true
           title: "${{env.TITLE}} latest-${{github.ref_name}}"
           files: |
-            SDL-Hyperion-${{github.ref_name}}-${{env.COMMIT_REF}}-Ubuntu-x64.tar.gz
+            Hercules-${{github.ref_name}}-${{env.COMMIT_REF}}-Ubuntu-x64.tar.gz
 
 ############
 
@@ -267,7 +267,7 @@ jobs:
               :: set /P dummy=
               ::
               call _dynamic_version.cmd
-              :: Remove double quotes from Fish's version string
+              :: Remove double quotes and spaces from Fish's version string
               set VERSION=%VERSION:"=%
               set VERSION=%VERSION: =%
               echo Build version info: %VERSION%
