@@ -102,12 +102,14 @@ jobs:
           VERSION="${VERSION%\"}"
           echo "VERSION (quotes1): $VERSION"
           VERSION="${VERSION#\"}"
-          echo "VERSION (quotes2: $VERSION"
+          echo "VERSION (quotes2): $VERSION"
           VERSION="${VERSION//[[:space:]]/}"
           echo "VERSION (spaces): $VERSION"
+          echo "VERSION=$VERSION" >>$GITHUB_ENV
           #
-          echo "Hercules-${{github.ref_name}}-${{env.COMMIT_REF}}-Ubuntu-x64.tar.gz"
-          tar cfz Hercules-${{github.ref_name}}-${{env.COMMIT_REF}}-Ubuntu-x64.tar.gz /usr/local/hercules
+          ZIPFILE="Hercules-$VERSION-Ubuntu-x64.tar.gz"
+          echo "ZIPFILE=$ZIPFILE" >>$GITHUB_ENV
+          tar cfz $ZIPFILE /usr/local/hercules
 
       - name: Set Title
         run: |
@@ -129,7 +131,7 @@ jobs:
           prerelease: true
           title: "${{env.TITLE}} latest-${{github.ref_name}}"
           files: |
-            Hercules-${{github.ref_name}}-${{env.COMMIT_REF}}-Ubuntu-x64.tar.gz
+            ${{env.ZIPFILE}}
 
 ############
 
