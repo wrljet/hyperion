@@ -97,10 +97,14 @@ jobs:
         run: |
           pwd
           ./_dynamic_version
+          # Remove double quotes from Fish's version string
+          VERSION="${VERSION%\"}"
+          VERSION="${VERSION#\"}"
+          VERSION="${VERSION//[[:space:]]/}"
           echo "VERSION: $VERSION"
           #
-          echo "SDL-Hyperion-${{github.ref_name}}-${{env.COMMIT_REF}}-Ubuntu.tar.gz"
-          tar cfz SDL-Hyperion-${{github.ref_name}}-${{env.COMMIT_REF}}-Ubuntu.tar.gz /usr/local/hercules
+          echo "Hercules-${{github.ref_name}}-${{env.COMMIT_REF}}-Ubuntu-x64.tar.gz"
+          tar cfz Hercules-${{github.ref_name}}-${{env.COMMIT_REF}}-Ubuntu-x64.tar.gz /usr/local/hercules
 
       - name: Set Title
         run: |
@@ -227,7 +231,7 @@ jobs:
             Invoke-WebRequest -URI $URL -OutFile $OutFile
             Expand-Archive -Path $ZIPFILE -DestinationPath "pcre"
             #
-            # D:\a\sandbox\hyperion\winbuild
+            # D:\a\hyperion\hyperion\winbuild
             dir
             #
           popd
@@ -287,7 +291,7 @@ jobs:
           dir ..
           pushd ..
             # Create a zip file with the contents of msvc.AMD64.bin
-            Compress-Archive -Path hyperion\msvc.AMD64.bin\*.* -DestinationPath "sandbox\$env:ZIPFILE"
+            Compress-Archive -Path hyperion\msvc.AMD64.bin\*.* -DestinationPath "hyperion\$env:ZIPFILE"
             echo "dir .. after zip"
             dir
           popd
