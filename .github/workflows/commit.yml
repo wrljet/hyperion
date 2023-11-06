@@ -96,8 +96,8 @@ jobs:
       - name: Create Release Archive
         run: |
           pwd
-          _dynamic_version
-          echo $VERSION
+          ./_dynamic_version
+          echo "VERSION: $VERSION"
           #
           echo "SDL-Hyperion-${{github.ref_name}}-${{env.COMMIT_REF}}-Ubuntu.tar.gz"
           tar cfz SDL-Hyperion-${{github.ref_name}}-${{env.COMMIT_REF}}-Ubuntu.tar.gz /usr/local/hercules
@@ -204,7 +204,7 @@ jobs:
           pushd ..
             dir
             git clone https://github.com/wrljet/hercules-helper-windows.git
-            git clone -b develop https://github.com/SDL-Hercules-390/hyperion.git
+            # git clone -b develop https://github.com/SDL-Hercules-390/hyperion.git
             dir
             mkdir hyperion\winbuild
             cd hyperion\winbuild
