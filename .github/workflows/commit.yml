@@ -19,7 +19,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Install dependencies (FUSE, attr)
+      - name: Install dependencies
         run: |
           if [ "$RUNNER_OS" = "Linux" ]; then
             sudo apt-get install git wget time ncat
@@ -35,6 +35,23 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v3.3.0
+
+      - name: Get Commit Ref
+        run: |
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            pwd
+            COMMIT_REF=$(git rev-parse --short $GITHUB_SHA)
+            echo "COMMIT_REF: $COMMIT_REF"
+            echo "COMMIT_REF=$COMMIT_REF" >>$GITHUB_ENV
+          elif [ "$RUNNER_OS" = "macOS" ]; then
+            COMMIT_REF=$(git rev-parse --short $GITHUB_SHA)
+            echo "COMMIT_REF: $COMMIT_REF"
+            echo "COMMIT_REF=$COMMIT_REF" >>$GITHUB_ENV
+            ls -l
+          else
+            echo Unsupported RUNNER_OS=$RUNNER_OS
+            exit 1
+          fi
 
       - name: Upload Linux release build
         uses: actions/upload-artifact@v2
