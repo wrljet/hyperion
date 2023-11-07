@@ -83,6 +83,8 @@ jobs:
           if [ "$RUNNER_OS" = "Linux" ]; then
             ls
           elif [ "$RUNNER_OS" = "macOS" ]; then
+            echo Not yes supported $RUNNER_OS
+            exit 1
           else
             echo Unsupported RUNNER_OS=$RUNNER_OS
             exit 1
