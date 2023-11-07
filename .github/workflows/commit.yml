@@ -38,6 +38,17 @@ jobs:
 #        draft: false
 #        prerelease: true   
 
+    - name: Set Title
+      run: |
+        echo "Tag: latest-${{github.ref_name}}"
+        if grep -q "develop" <<< "${{github.ref_name}}"; then
+          TITLE="Hercules Development Snapshot"
+        else
+          TITLE="Hercules"
+        fi
+        echo "Title: $TITLE"
+        echo "TITLE=$TITLE" >>$GITHUB_ENV
+
     - name: Attach Release Archive
       uses: wrljet/actions/packages/automatic-releases@built-packages
       with:
@@ -312,6 +323,42 @@ jobs:
           #
         popd
         dir
+
+    - name: Command Shell
+      shell: cmd
+      run: |
+        dir
+        dir ..
+        echo GITHUB_SHA: %GITHUB_SHA%
+        set "git_hash=-gHHHHHHH"
+        for /f %%a in ('git rev-parse --short HEAD') do set "COMMIT_REF=%%a"
+        echo GIT_HASH: %COMMIT_REF%
+        ::
+        pushd ..
+          dir
+        ::
+          rem dir "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build"
+        ::
+          set HERCULES_HELPER_BUILD_DIR=%cd%\hyperion
+          echo HERCULES_HELPER_BUILD_DIR: %HERCULES_HELPER_BUILD_DIR%
+        ::
+          set HERCULES_HELPER_VCVARS_CMD=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat
+        ::
+          pushd "%HERCULES_HELPER_BUILD_DIR%"
+            set HERCULES_BUILD_DIR=%cd%\msvc.AMD64.bin
+            call "%HERCULES_HELPER_VCVARS_CMD%"
+            :: set /P dummy=
+            ::
+            call _dynamic_version.cmd
+            :: Remove double quotes and spaces from Fish's version string
+            set VERSION=%VERSION:"=%
+            set VERSION=%VERSION: =%
+            echo Build version info: %VERSION%
+            echo %VERSION% > ..\DYNAMIC_VERSION
+            ::
+            call makefile.bat RETAIL-X64 makefile.msvc 8 -title "*** GitHub Actions Build ***" -a
+          popd
+        popd
 
 #        os:
 #          - ubuntu-latest
