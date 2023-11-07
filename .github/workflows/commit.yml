@@ -72,6 +72,7 @@ jobs:
             which rexx
             find /usr -name 'rexxsaa.h' 2>&1
           elif [ "$RUNNER_OS" = "macOS" ]; then
+            echo "FIXME -- Skip building Rexx on macOS"
           else
             echo Unsupported RUNNER_OS=$RUNNER_OS
             exit 1
