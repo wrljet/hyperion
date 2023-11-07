@@ -8,6 +8,45 @@ on:
       - "workflow"
 
 jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Install dependencies (FUSE, attr)
+        run: |
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            sudo apt-get install fuse libfuse-dev pkg-config attr
+          elif [ "$RUNNER_OS" = "macOS" ]; then
+            brew install macfuse pkg-config
+          else
+            echo Unsupported RUNNER_OS=$RUNNER_OS
+            exit 1
+          fi
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Upload Linux release build
+        uses: actions/upload-artifact@v2
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        with:
+          name: ffs.linux
+          path: target/release/ffs            
+
+      - name: Upload macOS release build
+        uses: actions/upload-artifact@v2
+        if: ${{ matrix.os == 'macos-latest' }}
+        with:
+          name: ffs.macos
+          path: target/release/ffs
+
   buildOnLinux:
 
     runs-on: ubuntu-latest
