@@ -22,8 +22,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.ref }}
-        release_name: "latest-${{ github.ref }}"
+        tag_name: ${{ github.ref_name }}
+        release_name: "latest-${{ github.ref_name }}"
         draft: false
         prerelease: true   
 
@@ -159,6 +159,28 @@ jobs:
         ls -l
         find -type f -exec md5sum '{}' \;
 
+    - name: Create Release Archive
+      run: |
+        pwd
+        #
+        # Create Fish style release name
+        VERSION=$(./_dynamic_version)
+        #
+        # Remove double quotes and spaces from Fish's version string
+        echo "VERSION (original): $VERSION"
+        VERSION="${VERSION%\"}"
+        echo "VERSION (quotes1): $VERSION"
+        VERSION="${VERSION#\"}"
+        echo "VERSION (quotes2): $VERSION"
+        VERSION="${VERSION//[[:space:]]/}"
+        echo "VERSION (spaces): $VERSION"
+        echo "VERSION=$VERSION" >>$GITHUB_ENV
+        #
+        # Name and create tarball
+        ZIPFILE="Hercules-$VERSION-Ubuntu-x64.tar.gz"
+        echo "ZIPFILE=$ZIPFILE" >>$GITHUB_ENV
+        tar cfz $ZIPFILE /usr/local/hercules
+
 ########
   build-macos:
 
@@ -223,7 +245,6 @@ jobs:
         node-version: [12.x]
 
     steps:
-#   - uses: actions/checkout@v1
     - uses: actions/checkout@v3.3.0
 
     - name: Use Node.js ${{ matrix.node-version }}
@@ -241,6 +262,48 @@ jobs:
         echo "---"
         echo "GITHUB_WORKSPACE: $env:GITHUB_WORKSPACE"
 
+    - name: Get Commit Ref
+      run: |
+        echo "GITHUB_WORKSPACE: $env:GITHUB_WORKSPACE"
+        #
+        # git rev-parse --short $env:GITHUB_SHA
+        $env:COMMIT_REF = (git rev-parse --short $env:GITHUB_SHA)
+        echo "COMMIT_REF: $env:COMMIT_REF"
+        echo "COMMIT_REF=$env:COMMIT_REF" >>$env:GITHUB_ENV
+
+    - name: Git Clones
+      run: |
+        pushd ..
+          dir
+          git clone https://github.com/wrljet/hercules-helper-windows.git
+          # git clone -b develop https://github.com/SDL-Hercules-390/hyperion.git
+          dir
+          mkdir hyperion\winbuild
+          cd hyperion\winbuild
+          #
+          $ZIPFILE = "ZLIB1-1.2.11-bin-lib-inc-vc2008-x86-x64.zip"
+          $URL = "http://www.softdevlabs.com/downloads/$ZIPFILE"
+          $OutFile = "$ZIPFILE"
+          Invoke-WebRequest -URI $URL -OutFile $OutFile
+          Expand-Archive -Path $ZIPFILE -DestinationPath "zlib"
+          #
+          $ZIPFILE ="BZIP2-1.0.6-bin-lib-inc-vc2008-x86-x64.zip"
+          $URL = "http://www.softdevlabs.com/downloads/$ZIPFILE"
+          $OutFile = "$ZIPFILE"
+          Invoke-WebRequest -URI $URL -OutFile $OutFile
+          Expand-Archive -Path $ZIPFILE -DestinationPath "bzip2"
+          #
+          $ZIPFILE = "PCRE-6.4.1-bin-lib-inc-vc2008-x86-x64.zip"
+          $URL = "http://www.softdevlabs.com/downloads/$ZIPFILE"
+          $OutFile = "$ZIPFILE"
+          Invoke-WebRequest -URI $URL -OutFile $OutFile
+          Expand-Archive -Path $ZIPFILE -DestinationPath "pcre"
+          #
+          # D:\a\hyperion\hyperion\winbuild
+          dir
+          #
+        popd
+        dir
 
 #        os:
 #          - ubuntu-latest
