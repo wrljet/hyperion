@@ -180,6 +180,13 @@ jobs:
         ZIPFILE="Hercules-$VERSION-Ubuntu-x64.tar.gz"
         echo "ZIPFILE=$ZIPFILE" >>$GITHUB_ENV
         tar cfz $ZIPFILE /usr/local/hercules
+        ls -l
+
+    - name: Upload build
+      uses: actions/upload-artifact@v2
+      with:
+        path: "${{env.ZIPFILE}}"
+        name: "uploads"
 
 ########
   build-macos:
