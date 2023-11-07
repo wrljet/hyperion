@@ -101,6 +101,63 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
+    - name: Build Regina Rexx (used for testing)
+      run: |
+          which rexx && true
+          export OPT_REGINA_URL="http://www.wrljet.com/ibm360/Regina-REXX-3.6.tar.gz"
+          export OPT_REGINA_TARFILE="Regina-REXX-3.6.tar.gz"
+          export OPT_REGINA_DIR="Regina-REXX-3.6"
+          wget $OPT_REGINA_URL
+          tar xfz "$OPT_REGINA_TARFILE"
+          pwd
+          pushd $OPT_REGINA_DIR
+          ./configure --libdir=/usr/lib
+          ./config.status --config
+          make
+          sudo make install
+          popd
+          which rexx
+          find /usr -name 'rexxsaa.h' 2>&1
+
+    - name: Build External Packages
+      run: |
+        ls
+
+    - name: Configure
+      run: |
+        export TZ='America/New_York'
+        mkdir build && cd build
+        CFLAGS=" -frecord-gcc-switches" ../configure --enable-optimization="-g -g3 -ggdb3 -O3 -march=native" --enable-custom="Built with GitHub Actions" --prefix=/usr/local/hercules --enable-regina-rexx
+        ./config.status --config
+
+    - name: Make
+      run: |
+        cd build
+        make clean
+        make -j3
+
+    - name: Run Tests
+      run: |
+        cd build
+        make check
+
+    - name: Install
+      run: |
+        cd build
+        sudo make install
+
+    - name: Try It Out
+      run: |
+        hash -r
+        cd build
+        /usr/local/hercules/bin/hercules && true
+
+    - name: List Output
+      run: |
+        cd /usr/local/hercules
+        ls -l
+        find -type f -exec md5sum '{}' \;
+
 ########
   build-macos:
 
@@ -111,12 +168,50 @@ jobs:
         node-version: [12.x]
 
     steps:
-    - uses: actions/checkout@v1
+#   - uses: actions/checkout@v1
+    - uses: actions/checkout@v3.3.0
+
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
 
+    - name: Get Commit Ref
+      run: |
+        COMMIT_REF=$(git rev-parse --short $GITHUB_SHA)
+        echo "COMMIT_REF: $COMMIT_REF"
+        echo "COMMIT_REF=$COMMIT_REF" >>$GITHUB_ENV
+        ls -l
+
+    - name: Install Packages
+      run: |
+        brew install cmake
+
+    - name: Build
+      run: |
+        uname -a
+        export TZ='America/New_York'
+        pwd # /Users/runner/work/hyperion/hyperion
+        pushd /Users/runner/work/hyperion
+        git clone https://github.com/wrljet/hercules-helper.git
+        ls -l
+        #
+        GIT_REPO_EXTPKGS="https://github.com/SDL-Hercules-390"
+        #
+        rm -rf extpkgs
+        mkdir extpkgs
+        pushd extpkgs
+        #
+        git clone $GIT_REPO_EXTPKGS/crypto crypto
+        git clone $GIT_REPO_EXTPKGS/decNumber decNumber
+        git clone $GIT_REPO_EXTPKGS/SoftFloat SoftFloat
+        git clone $GIT_REPO_EXTPKGS/telnet telnet
+        #
+        popd
+        #
+        # ./hercules-helper/hercules-buildall.sh --help
+        ./hercules-helper/hercules-buildall.sh --auto --homebrew --no-clone --flavor=sdl-hyperion
+        popd
 ########
   build-windows:
 
@@ -127,11 +222,23 @@ jobs:
         node-version: [12.x]
 
     steps:
-    - uses: actions/checkout@v1
+#   - uses: actions/checkout@v1
+    - uses: actions/checkout@v3.3.0
+
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
+
+    - name: Build System Info
+      run: |
+        echo 'Building on Windows Not Implemented Yet'
+        echo '$psversiontable...'
+        $psversiontable
+        echo 'get-computerinfo...'
+        get-computerinfo
+        echo "---"
+        echo "GITHUB_WORKSPACE: $env:GITHUB_WORKSPACE"
 
 
 #        os:
