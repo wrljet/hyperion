@@ -13,8 +13,8 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - macos-latest
           - ubuntu-latest
+          - macos-latest
 
     runs-on: ${{ matrix.os }}
 
@@ -22,16 +22,19 @@ jobs:
       - name: Install dependencies (FUSE, attr)
         run: |
           if [ "$RUNNER_OS" = "Linux" ]; then
-            sudo apt-get install fuse libfuse-dev pkg-config attr
+            sudo apt-get install git wget time ncat
+            sudo apt-get install build-essential
+            sudo apt-get install cmake autoconf automake flex gawk m4
+            sudo apt-get install libltdl-dev libtool-bin libcap2-bin libbz2-dev zlib1g-dev
           elif [ "$RUNNER_OS" = "macOS" ]; then
-            brew install macfuse pkg-config
+            brew install cmake
           else
             echo Unsupported RUNNER_OS=$RUNNER_OS
             exit 1
           fi
 
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.3.0
 
       - name: Upload Linux release build
         uses: actions/upload-artifact@v2
