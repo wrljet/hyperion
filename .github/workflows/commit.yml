@@ -46,7 +46,7 @@ jobs:
         prerelease: true
         title: "${{env.TITLE}} latest-${{github.ref_name}}"
         files: |
-          "release.zips"
+          release.zips
 
 #
 #    - name: Upload linux
@@ -92,7 +92,6 @@ jobs:
         node-version: [12.x]
 
     steps:
-#   - uses: actions/checkout@v1
     - uses: actions/checkout@v3.3.0
 
     - name: System Information
@@ -113,11 +112,6 @@ jobs:
         sudo apt-get install build-essential
         sudo apt-get install cmake autoconf automake flex gawk m4
         sudo apt-get install libltdl-dev libtool-bin libcap2-bin libbz2-dev zlib1g-dev
-
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
 
     - name: Build Regina Rexx (used for testing)
       run: |
@@ -217,11 +211,6 @@ jobs:
     steps:
 #   - uses: actions/checkout@v1
     - uses: actions/checkout@v3.3.0
-
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
 
     - name: Get Commit Ref
       run: |
