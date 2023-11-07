@@ -360,10 +360,25 @@ jobs:
           popd
         popd
 
-#        os:
-#          - ubuntu-latest
-#          - macos-latest
-#          - windows-2022 # Windows Server 2022
+    - name: Set Title
+      run: |
+        echo "Tag: latest-${{github.ref_name}}"
+        # if grep -q "develop" <<< "${{github.ref_name}}"; then
+          $env:TITLE="Hercules Development Snapshot"
+        # else
+        #  $env:TITLE="Hercules"
+        # fi
+        echo "Title: $env:TITLE"
+        echo "TITLE=$env:TITLE" >>$env:GITHUB_ENV
+        dir
+        echo "dir .."
+        dir ..
+
+    - name: Upload build
+      uses: actions/upload-artifact@v2
+      with:
+        path: "${{env.ZIPFILE}}"
+        name: "release.zips"
 
 #    runs-on: ${{ matrix.os }}
 #
