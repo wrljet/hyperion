@@ -24,6 +24,7 @@ jobs:
     - name: Review binaries
       run: |
         ls -l
+        echo "ZIPFILE: ${{env.ZIPFILE}}"
 
 #    - name: Create release
 #      id: create_release
@@ -45,7 +46,7 @@ jobs:
         prerelease: true
         title: "${{env.TITLE}} latest-${{github.ref_name}}"
         files: |
-          ${{env.ZIPFILE}}
+          uploads
 
 #
 #    - name: Upload linux
