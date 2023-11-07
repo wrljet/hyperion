@@ -24,7 +24,6 @@ jobs:
     - name: Review binaries
       run: |
         ls -l
-        ls -l uploads
 
 #    - name: Create release
 #      id: create_release
