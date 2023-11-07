@@ -53,6 +53,40 @@ jobs:
             exit 1
           fi
 
+      - name: Build Regina Rexx (used for testing)
+        run: |
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            which rexx && true
+            export OPT_REGINA_URL="http://www.wrljet.com/ibm360/Regina-REXX-3.6.tar.gz"
+            export OPT_REGINA_TARFILE="Regina-REXX-3.6.tar.gz"
+            export OPT_REGINA_DIR="Regina-REXX-3.6"
+            wget $OPT_REGINA_URL
+            tar xfz "$OPT_REGINA_TARFILE"
+            pwd
+            pushd $OPT_REGINA_DIR
+            ./configure --libdir=/usr/lib
+            ./config.status --config
+            make
+            sudo make install
+            popd
+            which rexx
+            find /usr -name 'rexxsaa.h' 2>&1
+          elif [ "$RUNNER_OS" = "macOS" ]; then
+          else
+            echo Unsupported RUNNER_OS=$RUNNER_OS
+            exit 1
+          fi
+
+      - name: Build External Packages
+        run: |
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            ls
+          elif [ "$RUNNER_OS" = "macOS" ]; then
+          else
+            echo Unsupported RUNNER_OS=$RUNNER_OS
+            exit 1
+          fi
+
       - name: Upload Linux release build
         uses: actions/upload-artifact@v2
         if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -67,6 +101,7 @@ jobs:
           name: ffs.macos
           path: target/release/ffs
 
+###############
   buildOnLinux:
 
     runs-on: ubuntu-latest
