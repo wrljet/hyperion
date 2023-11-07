@@ -11,7 +11,7 @@ jobs:
   build-release:
 
     runs-on: ubuntu-18.04
-    needs: [build-macos, build-linux, build-windows]
+    needs: [build-linux, build-macos, build-windows]
 
     steps:
     - uses: actions/checkout@v1
@@ -31,17 +31,6 @@ jobs:
       with:
         name: uploads    
 
-    - name: upload macos
-      id: upload-macos 
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./uploads/macos.zip
-        asset_name: macos.zip
-        asset_content_type: application/zip  
-
     - name: upload linux
       id: upload-linux
       uses: actions/upload-release-asset@v1.0.1
@@ -52,6 +41,17 @@ jobs:
         asset_path: ./uploads/linux.zip
         asset_name: linux.zip
         asset_content_type: application/zip   
+
+    - name: upload macos
+      id: upload-macos 
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./uploads/macos.zip
+        asset_name: macos.zip
+        asset_content_type: application/zip  
 
     - name: upload windows
       id: upload-windows
@@ -65,25 +65,46 @@ jobs:
         asset_content_type: application/zip
 
 ########
-  build-macos:
+  build-linux:
 
-    runs-on: macOS-12 # Monterey
+    runs-on: ubuntu-latest
 
     strategy:
       matrix:
         node-version: [12.x]
 
     steps:
-    - uses: actions/checkout@v1
+#   - uses: actions/checkout@v1
+    - uses: actions/checkout@v3.3.0
+
+    - name: System Information
+      run: |
+        uname -a
+        cat /etc/os-release
+
+    - name: Get Commit Ref
+      run: |
+        pwd
+        COMMIT_REF=$(git rev-parse --short $GITHUB_SHA)
+        echo "COMMIT_REF: $COMMIT_REF"
+        echo "COMMIT_REF=$COMMIT_REF" >>$GITHUB_ENV
+
+    - name: Install Packages
+      run: |
+        sudo apt-get install git wget time ncat
+        sudo apt-get install build-essential
+        sudo apt-get install cmake autoconf automake flex gawk m4
+        sudo apt-get install libltdl-dev libtool-bin libcap2-bin libbz2-dev zlib1g-dev
+
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
 
 ########
-  build-linux:
+  build-macos:
 
-    runs-on: ubuntu-latest
+    runs-on: macOS-12 # Monterey
 
     strategy:
       matrix:
