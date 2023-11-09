@@ -130,9 +130,10 @@ jobs:
         sudo apt-get install cmake autoconf automake flex gawk m4
         sudo apt-get install libltdl-dev libtool-bin libcap2-bin libbz2-dev zlib1g-dev
         #
-        pushd ..
+        pushd ~
           pwd
           git clone https://github.com/wrljet/hercules-helper.git
+          ls -l
         popd
 
     - name: Build Regina Rexx (used for testing)
@@ -152,7 +153,7 @@ jobs:
           popd
           echo "Files:"
           which rexx
-          find /usr/local -name 'rexxsaa.h' 2>&1
+          find /usr/local/include -name 'rexx*.h' 2>&1
 
     - name: Build External Packages
       run: |
