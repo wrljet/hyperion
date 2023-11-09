@@ -48,9 +48,6 @@ jobs:
         files: |
           release.zips
 
-#     - name: Checksums
-#       uses: wangzuo/action-release-checksums@v1
- 
      - name: Generate checksum
        uses: jmgilman/actions-generate-checksum@v1
        with:
