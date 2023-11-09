@@ -123,6 +123,11 @@ jobs:
         sudo apt-get install build-essential
         sudo apt-get install cmake autoconf automake flex gawk m4
         sudo apt-get install libltdl-dev libtool-bin libcap2-bin libbz2-dev zlib1g-dev
+        #
+        pushd ..
+          pwd
+          git clone https://github.com/wrljet/hercules-helper.git
+        popd
 
     - name: Build Regina Rexx (used for testing)
       run: |
@@ -185,6 +190,20 @@ jobs:
           hercules_vers="$(./_dynamic_version . VERSION | awk '{sub("-modified","", $0); print}' | sed 's/"//g')"
         popd
         echo "Hercules package version: $hercules_vers"
+        #
+        version_name="4.4"
+        package_name="hyperion-$version_name"
+        SCRIPT_PATH=../hercules-helper
+        SCRIPT_DIR="$(dirname $SCRIPT_PATH)"
+        dpkg_src="$SCRIPT_DIR/packagers/debian/$package_name"   # hercules-helper/packagers/debian/hyperion-4.4
+        echo "dpkg_src=$dpkg_src"
+        #
+        sudo rm -rf ./$package_name
+        cp -R $dpkg_src $package_name/
+        sudo cp ./$package_name/DEBIAN/control ./$package_name/DEBIAN/control.orig
+        # must 'sudo sh -c' to get the redirection to run as root
+        sudo sh -c \"sed 's/Version:.*$/Version: $hercules_vers/' ./$package_name/DEBIAN/control.orig > ./$package_name/DEBIAN/control\"
+        cat ./$package_name/DEBIAN/control
 
     - name: Try It Out
       run: |
