@@ -303,6 +303,17 @@ jobs:
         echo "hash -r and which"
         hash -r
         which hercules
+        hercules --version
+        #
+        echo "dpkg-deb -f ..."
+        dpkg-deb -f "$PACKAGE_NAME.deb"
+        #
+        echo "dpkg-deb -s ..."
+        dpkg -s "$PACKAGE_NAME"
+        #
+        echo "dpkg-deb -l ..."
+        dpkg -l "$PACKAGE_NAME"
+        #
 
     - name: Upload build
       uses: actions/upload-artifact@v2
