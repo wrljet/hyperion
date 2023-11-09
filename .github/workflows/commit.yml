@@ -125,6 +125,9 @@ jobs:
         VERSION_NAME="4.7"
         echo "VERSION_NAME: $VERSION_NAME"
         echo "VERSION_NAME=$VERSION_NAME" >>$GITHUB_ENV
+        PACKAGE_NAME="hyperion-$VERSION_NAME"
+        echo "PACKAGE_NAME: $PACKAGE_NAME"
+        echo "PACKAGE_NAME=$PACKAGE_NAME" >>$GITHUB_ENV
 
     - name: Install Packages
       run: |
@@ -166,7 +169,7 @@ jobs:
       run: |
         export TZ='America/New_York'
         mkdir build && cd build
-        CFLAGS=" -frecord-gcc-switches" ../configure --enable-optimization="-g -g3 -ggdb3 -O3 -march=native" --enable-custom="Built with GitHub Actions" --prefix=/usr/local/hercules --enable-regina-rexx
+        CFLAGS=" -frecord-gcc-switches" ../configure --enable-optimization="-g -g3 -ggdb3 -O3 -march=native" --enable-custom="Built with GitHub Actions" --prefix=/usr/local/$PACKAGE_NAME --enable-regina-rexx
         ./config.status --config
 
     - name: Make
@@ -185,7 +188,7 @@ jobs:
         cd build
         sudo make install
         #
-        install_prefix=/usr/local/hercules
+        install_prefix=/usr/local/$PACKAGE_NAME
         sudo setcap 'cap_sys_nice=eip' $install_prefix/bin/hercules
         sudo setcap 'cap_sys_nice=eip' $install_prefix/bin/herclin
         sudo setcap 'cap_net_admin+ep' $install_prefix/bin/hercifc
@@ -195,11 +198,11 @@ jobs:
       run: |
         hash -r
         cd build
-        /usr/local/hercules/bin/hercules && true
+        /usr/local/$PACKAGE_NAME/bin/hercules && true
 
     - name: List Output
       run: |
-        cd /usr/local/hercules
+        cd /usr/local/$PACKAGE_NAME
         ls -l
         find -type f -exec md5sum '{}' \;
 
@@ -223,7 +226,7 @@ jobs:
         # Name and create tarball
         ZIPFILE="Hercules-$VERSION-Ubuntu-x64.tar.gz"
         echo "ZIPFILE=$ZIPFILE" >>$GITHUB_ENV
-        tar cfz $ZIPFILE /usr/local/hercules
+        tar cfz $ZIPFILE /usr/local/$PACKAGE_NAME
         ls -l
 
     - name: Prepare DPKG
@@ -237,7 +240,6 @@ jobs:
         hercules_vers="$(./_dynamic_version . VERSION | awk '{sub("-modified","", $0); print}' | sed 's/"//g')"
         echo "Hercules package version: $hercules_vers"
         #
-        PACKAGE_NAME="hyperion-$VERSION_NAME"
         SCRIPT_PATH=~/hercules-helper
         echo "SCRIPT_PATH=$SCRIPT_PATH"
         #SCRIPT_DIR="$(dirname $SCRIPT_PATH)"
