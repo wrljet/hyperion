@@ -293,7 +293,8 @@ jobs:
       run: |
         echo "pwd = $(pwd)"
         sudo dpkg --install $PACKAGE_NAME.deb
-        dpkg -L $PACKAGE_NAME
+        # FIXME -dev is in 'control' file
+        dpkg -L "$PACKAGE_NAME-dev"
         #
         hash -r
         which hercules
