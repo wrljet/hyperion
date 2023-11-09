@@ -310,7 +310,8 @@ jobs:
         #
 
     - name: Create dpkg sha256 
-        run: curl -sL "$PACKAGE_NAME.deb" | shasum -a 256 | cut -d " " -f 1
+      run: |
+        curl -sL "$PACKAGE_NAME.deb" | shasum -a 256 | cut -d " " -f 1
 
     - name: Upload build
       uses: actions/upload-artifact@v2
