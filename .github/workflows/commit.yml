@@ -253,6 +253,27 @@ jobs:
         # must 'sudo sh -c' to get the redirection to run as root
         sudo sh -c "sed 's/Version:.*$/Version: $hercules_vers/' ./$package_name/DEBIAN/control.orig > ./$package_name/DEBIAN/control"
         cat ./$package_name/DEBIAN/control
+        #
+        echo "Copy everything locally; correct libs dir"
+        #
+        pushd $package_name >/dev/null;
+        sudo rm -rf usr
+        sudo mkdir -p ./usr/local
+        sudo cp -R /usr/local/$package_name/* ./usr/local/
+        #sudo mv ./usr/local/lib/hercules/* ./usr/local/lib
+        #
+        sudo mkdir -p ./usr/local/lib
+        sudo cp /usr/local/lib/libh* ./usr/local/lib
+        sudo cp -R /usr/local/lib/hercules ./usr/local/lib/hercules
+        echo
+        ls -R --format=horizontal ./usr/local/lib
+        echo
+        popd
+        #
+        sudo chown root:root -R ./$package_name
+        #
+        echo "Delete the temporary 'make install' dir"
+        sudo rm -rf /usr/local/$package_name
 
     - name: Upload build
       uses: actions/upload-artifact@v2
