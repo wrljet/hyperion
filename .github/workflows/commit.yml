@@ -292,10 +292,15 @@ jobs:
     - name: Test install the new dpkg deb
       run: |
         echo "pwd = $(pwd)"
+        echo "dpkg --install ..."
         sudo dpkg --install $PACKAGE_NAME.deb
+        echo
         # FIXME -dev is in 'control' file
+        echo "dpkg -L ..."
         dpkg -L "$PACKAGE_NAME-dev"
+        echo
         #
+        echo "hash -r and which"
         hash -r
         which hercules
 
