@@ -280,7 +280,7 @@ jobs:
         echo "Delete the temporary 'make install' dir"
         sudo rm -rf /usr/local/$PACKAGE_NAME
         #
-        echo "Step: create the Debian package:"
+        echo "Create the Debian package"
         dpkg -b ./$package_name
         ls -lh $package_name.deb
 
