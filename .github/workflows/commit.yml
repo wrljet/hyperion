@@ -226,7 +226,7 @@ jobs:
         #  version_info="$0: $(git describe --long --tags --dirty --always)"
         #popd
         #
-        pushd .. # hyperion
+        pushd hyperion # hyperion
           hercules_vers="$(./_dynamic_version . VERSION | awk '{sub("-modified","", $0); print}' | sed 's/"//g')"
         popd
         echo "Hercules package version: $hercules_vers"
