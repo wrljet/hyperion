@@ -38,6 +38,13 @@ jobs:
         echo "Title: $TITLE"
         echo "TITLE=$TITLE" >>$GITHUB_ENV
 
+    - name: Generate checksum
+      uses: jmgilman/actions-generate-checksum@v1
+      with:
+        patterns: |
+          release.zips/*.zip
+          release.zips/*.tar.gz
+
     - name: Attach Release Archive
       uses: wrljet/actions/packages/automatic-releases@built-packages
       with:
@@ -46,14 +53,8 @@ jobs:
         prerelease: true
         title: "${{env.TITLE}} latest-${{github.ref_name}}"
         files: |
+          checksum.txt
           release.zips
-
-    - name: Generate checksum
-      uses: jmgilman/actions-generate-checksum@v1
-      with:
-        patterns: |
-          release.zips/*.zip
-          release.zips/*.tar.gz
 
 #    - name: Upload linux
 #      id: upload-linux
