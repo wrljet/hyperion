@@ -267,7 +267,7 @@ jobs:
         #sudo mkdir -p ./usr/local/lib
         # Display what got built and installed
         ls -R --format=horizontal /usr/local/$PACKAGE_NAME
-#
+        #
         #sudo cp /usr/local/lib/libh* ./usr/local/lib
         #sudo cp -R /usr/local/lib/hercules ./usr/local/lib/hercules
         echo
@@ -300,7 +300,6 @@ jobs:
         node-version: [12.x]
 
     steps:
-#   - uses: actions/checkout@v1
     - uses: actions/checkout@v3.3.0
 
     - name: Get Commit Ref
