@@ -109,7 +109,7 @@ jobs:
       run: |
         uname -a
         cat /etc/os-release
-        echo -n "pwd="
+        #echo -n "pwd="
         pwd
         SCRIPT_PATH=~/hercules-helper
         echo "SCRIPT_PATH=$SCRIPT_PATH"
