@@ -144,9 +144,9 @@ jobs:
           make
           sudo make install
           popd
+          echo "Files:"
           which rexx
-          # FIXME this find takes forever!
-          find /usr -name 'rexxsaa.h' 2>&1
+          find /usr/local -name 'rexxsaa.h' 2>&1
 
     - name: Build External Packages
       run: |
@@ -226,9 +226,7 @@ jobs:
         #  version_info="$0: $(git describe --long --tags --dirty --always)"
         #popd
         #
-        pushd hyperion # hyperion
-          hercules_vers="$(./_dynamic_version . VERSION | awk '{sub("-modified","", $0); print}' | sed 's/"//g')"
-        popd
+        hercules_vers="$(./_dynamic_version . VERSION | awk '{sub("-modified","", $0); print}' | sed 's/"//g')"
         echo "Hercules package version: $hercules_vers"
         #
         version_name="4.4"
