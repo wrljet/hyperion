@@ -51,12 +51,12 @@ jobs:
 #     - name: Checksums
 #       uses: wangzuo/action-release-checksums@v1
  
-      - name: Generate checksum
-        uses: jmgilman/actions-generate-checksum@v1
-        with:
-          patterns: |
-            release.zips/*.zip
-            release.zips/*.tar.gz
+     - name: Generate checksum
+       uses: jmgilman/actions-generate-checksum@v1
+       with:
+         patterns: |
+           release.zips/*.zip
+           release.zips/*.tar.gz
 #
 #    - name: Upload linux
 #      id: upload-linux
