@@ -264,13 +264,45 @@ jobs:
         sudo cp -R /usr/local/$PACKAGE_NAME/* ./usr/local/
         #sudo mv ./usr/local/lib/hercules/* ./usr/local/lib
         #
-        sudo mkdir -p ./usr/local/lib
-        ls /usr/local/lib
+        #sudo mkdir -p ./usr/local/lib
+        # Display what got built and installed
         ls -R --format=horizontal /usr/local/$PACKAGE_NAME
+#
+#       /usr/local/hyperion-4.7:
+#       bin  lib  share
+#       
+#       /usr/local/hyperion-4.7/bin:
+#       cckd2ckd    cckd642ckd	cckdcdsk    cckdcdsk64	cckdcomp    cckdcomp64
+#       cckddiag    cckddiag64	cckdmap     cckdswap	cckdswap64  cfba2fba
+#       cfba642fba  ckd2cckd	ckd2cckd64  convto64	dasdcat     dasdconv
+#       dasdconv64  dasdcopy	dasdcopy64  dasdinit	dasdinit64  dasdisup
+#       dasdlist    dasdload	dasdload64  dasdls	dasdpdsu    dasdseq
+#       dasdser     dmap2hrc	fba2cfba    fba2cfba64	hercifc     herclin
+#       hercules    hetget	hetinit     hetmap	hetupd	    maketape
+#       tapecopy    tapemap	tapesplt    tfprint	tfswap	    txt2card
+#       vmfplc2
+#       
+#       /usr/local/hyperion-4.7/lib:
+#       hercules     libhdt3420_not_mod.la  libhdt3420_not_mod.so  libherc.la
+#       libherc.so   libhercd.la	    libhercd.so		   libhercs.la
+#       libhercs.so  libherct.la	    libherct.so		   libhercu.la
+#       libhercu.so
+#       
+#       /usr/local/hyperion-4.7/lib/hercules:
+#       dyncrypt.la  dyncrypt.so  dyngui.la	dyngui.so     hdt1052c.la  hdt1052c.so
+#       hdt1403.la   hdt1403.so   hdt2703.la	hdt2703.so    hdt2880.la   hdt2880.so
+#       hdt3088.la   hdt3088.so   hdt3270.la	hdt3270.so    hdt3420.la   hdt3420.so
+#       hdt3505.la   hdt3505.so   hdt3525.la	hdt3525.so    hdt3705.la   hdt3705.so
+#       hdtdummy.la  hdtdummy.so  hdteq.la	hdteq.so      hdtptp.la    hdtptp.so
+#       hdtqeth.la   hdtqeth.so   hdttcpnje.la	hdttcpnje.so  hdtzfcp.la   hdtzfcp.so
+#       
+#       /usr/local/hyperion-4.7/share:
+#       hercules  man
+#
         #sudo cp /usr/local/lib/libh* ./usr/local/lib
         #sudo cp -R /usr/local/lib/hercules ./usr/local/lib/hercules
         echo
-        ls -R --format=horizontal ./usr/local/lib
+        ls -R --format=horizontal ./usr/local/$PACKAGE_NAME
         echo
         popd
         #
@@ -278,6 +310,10 @@ jobs:
         #
         echo "Delete the temporary 'make install' dir"
         sudo rm -rf /usr/local/$PACKAGE_NAME
+        #
+        echo "Step: create the Debian package:"
+        dpkg -b ./$package_name
+        ls -lh $package_name.deb
 
     - name: Upload build
       uses: actions/upload-artifact@v2
