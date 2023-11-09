@@ -272,6 +272,8 @@ jobs:
         #sudo cp /usr/local/lib/libh* ./usr/local/lib
         #sudo cp -R /usr/local/lib/hercules ./usr/local/lib/hercules
         echo
+        pwd
+        ls
         ls -R --format=horizontal ./usr/local/$PACKAGE_NAME
         echo
         popd
