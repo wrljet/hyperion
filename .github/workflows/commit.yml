@@ -293,7 +293,10 @@ jobs:
       run: |
         echo "pwd = $(pwd)"
         sudo dpkg --install $PACKAGE_NAME.deb
-        dpkg -L $package_name
+        dpkg -L $PACKAGE_NAME
+        #
+        hash -r
+        which hercules
 
     - name: Upload build
       uses: actions/upload-artifact@v2
