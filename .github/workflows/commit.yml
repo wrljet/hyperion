@@ -231,10 +231,8 @@ jobs:
         echo "pwd = $(pwd)"
         this_dir="$(readlink -f .)"
         echo "cd = $this_dir"
-        #pushd $SCRIPT_DIR >/dev/null;"
         #  echo "Packager script version: $0: $(git describe --long --tags --dirty --always 2>/dev/null)"
         #  version_info="$0: $(git describe --long --tags --dirty --always)"
-        #popd
         #
         hercules_vers="$(./_dynamic_version . VERSION | awk '{sub("-modified","", $0); print}' | sed 's/"//g')"
         echo "Hercules package version: $hercules_vers"
