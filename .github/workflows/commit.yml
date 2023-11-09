@@ -274,6 +274,7 @@ jobs:
         echo
         pwd
         ls
+        ls -R --format=horizontal ./usr/local
         ls -R --format=horizontal ./usr/local/$PACKAGE_NAME
         echo
         popd
