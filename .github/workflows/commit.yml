@@ -109,6 +109,11 @@ jobs:
       run: |
         uname -a
         cat /etc/os-release
+        echo "pwd=$(pwd)"
+        SCRIPT_PATH=~/hercules-helper
+        echo "SCRIPT_PATH=$SCRIPT_PATH"
+        SCRIPT_DIR="$(dirname $SCRIPT_PATH)"
+        echo "SCRIPT_DIR=$SCRIPT_DIR"
 
     - name: Get Commit Ref
       run: |
@@ -231,8 +236,10 @@ jobs:
         #
         version_name="4.4"
         package_name="hyperion-$version_name"
-        SCRIPT_PATH=../hercules-helper
+        SCRIPT_PATH=~/hercules-helper
+        echo "SCRIPT_PATH=$SCRIPT_PATH"
         SCRIPT_DIR="$(dirname $SCRIPT_PATH)"
+        echo "SCRIPT_DIR=$SCRIPT_DIR"
         dpkg_src="$SCRIPT_DIR/packagers/debian/$package_name"   # hercules-helper/packagers/debian/hyperion-4.4
         echo "dpkg_src=$dpkg_src"
         #
