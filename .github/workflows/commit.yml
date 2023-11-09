@@ -265,7 +265,8 @@ jobs:
         #sudo mv ./usr/local/lib/hercules/* ./usr/local/lib
         #
         sudo mkdir -p ./usr/local/lib
-        sudo cp /usr/local/lib/libh* ./usr/local/lib
+        ls /usr/local/lib
+        #sudo cp /usr/local/lib/libh* ./usr/local/lib
         sudo cp -R /usr/local/lib/hercules ./usr/local/lib/hercules
         echo
         ls -R --format=horizontal ./usr/local/lib
