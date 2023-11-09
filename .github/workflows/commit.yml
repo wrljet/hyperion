@@ -309,16 +309,24 @@ jobs:
         dpkg-deb -f "$PACKAGE_NAME.deb"
         #
         echo "dpkg-deb -s ..."
-        dpkg -s "$PACKAGE_NAME"
+        # FIXME
+        dpkg -s "$PACKAGE_NAME-dev"
         #
         echo "dpkg-deb -l ..."
-        dpkg -l "$PACKAGE_NAME"
+        # FIXME
+        dpkg -l "$PACKAGE_NAME-dev"
         #
 
     - name: Upload build
       uses: actions/upload-artifact@v2
       with:
         path: "${{env.ZIPFILE}}"
+        name: "release.zips"
+
+    - name: Upload dpkg
+      uses: actions/upload-artifact@v2
+      with:
+        path: "$PACKAGE_NAME.deb"
         name: "release.zips"
 
 ########
