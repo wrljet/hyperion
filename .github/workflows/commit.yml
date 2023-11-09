@@ -168,6 +168,23 @@ jobs:
       run: |
         cd build
         sudo make install
+        #
+        install_prefix=/usr/local/hercules
+        sudo setcap 'cap_sys_nice=eip' $install_prefix/bin/hercules
+        sudo setcap 'cap_sys_nice=eip' $install_prefix/bin/herclin
+        sudo setcap 'cap_net_admin+ep' $install_prefix/bin/hercifc
+        #
+        this_dir="$(readlink -f .)"
+        echo "cd = $this_dir"
+        pushd $SCRIPT_DIR >/dev/null;"
+          echo "Packager script version: $0: $(git describe --long --tags --dirty --always 2>/dev/null)"
+          version_info="$0: $(git describe --long --tags --dirty --always)"
+        popd
+        #
+        pushd ./hyperion >/dev/null;"
+          hercules_vers="$(./_dynamic_version . VERSION | awk '{sub("-modified","", $0); print}' | sed 's/"//g')"
+        popd
+        echo "Hercules package version: $hercules_vers"
 
     - name: Try It Out
       run: |
@@ -259,6 +276,7 @@ jobs:
         # ./hercules-helper/hercules-buildall.sh --help
         ./hercules-helper/hercules-buildall.sh --auto --homebrew --no-clone --flavor=sdl-hyperion
         popd
+
 ########
   build-windows:
 
