@@ -145,6 +145,7 @@ jobs:
           sudo make install
           popd
           which rexx
+          # FIXME this find takes forever!
           find /usr -name 'rexxsaa.h' 2>&1
 
     - name: Build External Packages
@@ -179,31 +180,6 @@ jobs:
         sudo setcap 'cap_sys_nice=eip' $install_prefix/bin/herclin
         sudo setcap 'cap_net_admin+ep' $install_prefix/bin/hercifc
         #
-        this_dir="$(readlink -f .)"
-        echo "cd = $this_dir"
-        #pushd $SCRIPT_DIR >/dev/null;"
-        #  echo "Packager script version: $0: $(git describe --long --tags --dirty --always 2>/dev/null)"
-        #  version_info="$0: $(git describe --long --tags --dirty --always)"
-        #popd
-        #
-        pushd .. # hyperion
-          hercules_vers="$(./_dynamic_version . VERSION | awk '{sub("-modified","", $0); print}' | sed 's/"//g')"
-        popd
-        echo "Hercules package version: $hercules_vers"
-        #
-        version_name="4.4"
-        package_name="hyperion-$version_name"
-        SCRIPT_PATH=../hercules-helper
-        SCRIPT_DIR="$(dirname $SCRIPT_PATH)"
-        dpkg_src="$SCRIPT_DIR/packagers/debian/$package_name"   # hercules-helper/packagers/debian/hyperion-4.4
-        echo "dpkg_src=$dpkg_src"
-        #
-        sudo rm -rf ./$package_name
-        cp -R $dpkg_src $package_name/
-        sudo cp ./$package_name/DEBIAN/control ./$package_name/DEBIAN/control.orig
-        # must 'sudo sh -c' to get the redirection to run as root
-        sudo sh -c \"sed 's/Version:.*$/Version: $hercules_vers/' ./$package_name/DEBIAN/control.orig > ./$package_name/DEBIAN/control\"
-        cat ./$package_name/DEBIAN/control
 
     - name: Try It Out
       run: |
@@ -239,6 +215,35 @@ jobs:
         echo "ZIPFILE=$ZIPFILE" >>$GITHUB_ENV
         tar cfz $ZIPFILE /usr/local/hercules
         ls -l
+
+    - name: Prepare DPKG
+      run: |
+        echo "pwd = $(pwd)"
+        this_dir="$(readlink -f .)"
+        echo "cd = $this_dir"
+        #pushd $SCRIPT_DIR >/dev/null;"
+        #  echo "Packager script version: $0: $(git describe --long --tags --dirty --always 2>/dev/null)"
+        #  version_info="$0: $(git describe --long --tags --dirty --always)"
+        #popd
+        #
+        pushd .. # hyperion
+          hercules_vers="$(./_dynamic_version . VERSION | awk '{sub("-modified","", $0); print}' | sed 's/"//g')"
+        popd
+        echo "Hercules package version: $hercules_vers"
+        #
+        version_name="4.4"
+        package_name="hyperion-$version_name"
+        SCRIPT_PATH=../hercules-helper
+        SCRIPT_DIR="$(dirname $SCRIPT_PATH)"
+        dpkg_src="$SCRIPT_DIR/packagers/debian/$package_name"   # hercules-helper/packagers/debian/hyperion-4.4
+        echo "dpkg_src=$dpkg_src"
+        #
+        sudo rm -rf ./$package_name
+        cp -R $dpkg_src $package_name/
+        sudo cp ./$package_name/DEBIAN/control ./$package_name/DEBIAN/control.orig
+        # must 'sudo sh -c' to get the redirection to run as root
+        sudo sh -c \"sed 's/Version:.*$/Version: $hercules_vers/' ./$package_name/DEBIAN/control.orig > ./$package_name/DEBIAN/control\"
+        cat ./$package_name/DEBIAN/control
 
     - name: Upload build
       uses: actions/upload-artifact@v2
