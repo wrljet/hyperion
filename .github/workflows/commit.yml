@@ -122,6 +122,9 @@ jobs:
         COMMIT_REF=$(git rev-parse --short $GITHUB_SHA)
         echo "COMMIT_REF: $COMMIT_REF"
         echo "COMMIT_REF=$COMMIT_REF" >>$GITHUB_ENV
+        VERSION_NAME="4.7"
+        echo "VERSION_NAME: $VERSION_NAME"
+        echo "VERSION_NAME=$VERSION_NAME" >>$GITHUB_ENV
 
     - name: Install Packages
       run: |
@@ -236,30 +239,29 @@ jobs:
         hercules_vers="$(./_dynamic_version . VERSION | awk '{sub("-modified","", $0); print}' | sed 's/"//g')"
         echo "Hercules package version: $hercules_vers"
         #
-        version_name="4.4"
-        package_name="hyperion-$version_name"
+        PACKAGE_NAME="hyperion-$VERSION_NAME"
         SCRIPT_PATH=~/hercules-helper
         echo "SCRIPT_PATH=$SCRIPT_PATH"
         #SCRIPT_DIR="$(dirname $SCRIPT_PATH)"
         SCRIPT_DIR=~/hercules-helper
         echo "SCRIPT_DIR=$SCRIPT_DIR"
         ls -l $SCRIPT_DIR
-        dpkg_src="$SCRIPT_DIR/packagers/debian/$package_name"   # hercules-helper/packagers/debian/hyperion-4.4
+        dpkg_src="$SCRIPT_DIR/packagers/debian/$PACKAGE_NAME"   # hercules-helper/packagers/debian/hyperion-4.4
         echo "dpkg_src=$dpkg_src"
         #
-        sudo rm -rf ./$package_name
-        cp -R $dpkg_src $package_name/
-        sudo cp ./$package_name/DEBIAN/control ./$package_name/DEBIAN/control.orig
+        sudo rm -rf ./$PACKAGE_NAME
+        cp -R $dpkg_src $PACKAGE_NAME/
+        sudo cp ./$PACKAGE_NAME/DEBIAN/control ./$PACKAGE_NAME/DEBIAN/control.orig
         # must 'sudo sh -c' to get the redirection to run as root
-        sudo sh -c "sed 's/Version:.*$/Version: $hercules_vers/' ./$package_name/DEBIAN/control.orig > ./$package_name/DEBIAN/control"
-        cat ./$package_name/DEBIAN/control
+        sudo sh -c "sed 's/Version:.*$/Version: $hercules_vers/' ./$PACKAGE_NAME/DEBIAN/control.orig > ./$PACKAGE_NAME/DEBIAN/control"
+        cat ./$PACKAGE_NAME/DEBIAN/control
         #
         echo "Copy everything locally; correct libs dir"
         #
-        pushd $package_name >/dev/null;
+        pushd $PACKAGE_NAME >/dev/null;
         sudo rm -rf usr
         sudo mkdir -p ./usr/local
-        sudo cp -R /usr/local/$package_name/* ./usr/local/
+        sudo cp -R /usr/local/$PACKAGE_NAME/* ./usr/local/
         #sudo mv ./usr/local/lib/hercules/* ./usr/local/lib
         #
         sudo mkdir -p ./usr/local/lib
@@ -270,10 +272,10 @@ jobs:
         echo
         popd
         #
-        sudo chown root:root -R ./$package_name
+        sudo chown root:root -R ./$PACKAGE_NAME
         #
         echo "Delete the temporary 'make install' dir"
-        sudo rm -rf /usr/local/$package_name
+        sudo rm -rf /usr/local/$PACKAGE_NAME
 
     - name: Upload build
       uses: actions/upload-artifact@v2
@@ -635,7 +637,7 @@ jobs:
 #        run: |
 #          export TZ='America/New_York'
 #          mkdir build && cd build
-#          CFLAGS=" -frecord-gcc-switches" ../configure --enable-optimization="-g -g3 -ggdb3 -O3 -march=native" --enable-custom="Built with GitHub Actions" --prefix=/usr/local/hercules --enable-regina-rexx
+#          CFLAGS=" -frecord-gcc-switches" ../configure --enable-optimization="-g -g3 -ggdb3 -O3 -march=native" --enable-custom="Built with GitHub Actions" --prefix=/usr/local/$VERSION_NAME --enable-regina-rexx
 #          ./config.status --config
 #
 #      - name: Make
