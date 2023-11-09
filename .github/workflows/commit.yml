@@ -258,6 +258,9 @@ jobs:
         #
         echo "Copy everything locally; correct libs dir"
         #
+        # Display what got built and installed
+        ls -R --format=horizontal /usr/local/$PACKAGE_NAME
+        #
         pushd $PACKAGE_NAME >/dev/null;
         sudo rm -rf usr
         sudo mkdir -p ./usr/local
@@ -265,8 +268,6 @@ jobs:
         #sudo mv ./usr/local/lib/hercules/* ./usr/local/lib
         #
         #sudo mkdir -p ./usr/local/lib
-        # Display what got built and installed
-        ls -R --format=horizontal /usr/local/$PACKAGE_NAME
         #
         #sudo cp /usr/local/lib/libh* ./usr/local/lib
         #sudo cp -R /usr/local/lib/hercules ./usr/local/lib/hercules
