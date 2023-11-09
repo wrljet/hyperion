@@ -284,8 +284,16 @@ jobs:
         sudo rm -rf /usr/local/$PACKAGE_NAME
         #
         echo "Create the Debian package"
-        dpkg -b ./$package_name
-        ls -lh $package_name.deb
+        pwd
+        ls
+        dpkg -b ./$PACKAGE_NAME
+        ls -lh $PACKAGE_NAME.deb
+
+    - name: Test install the new dpkg deb
+      run: |
+        echo "pwd = $(pwd)"
+        sudo dpkg --install $PACKAGE_NAME.deb
+        dpkg -L $package_name
 
     - name: Upload build
       uses: actions/upload-artifact@v2
