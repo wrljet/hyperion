@@ -344,7 +344,8 @@ jobs:
         pwd
         dpkg -b ./$PACKAGE_NAME
         LINUX_DEBNAME="Hercules-$VERSION.deb"
-        ls -lh $LINUX_DEBNAME.deb
+        echo "LINUX_DEBNAME=$LINUX_DEBNAME" >>$GITHUB_ENV
+        ls -lh $LINUX_DEBNAME
 
     - name: Test install the new dpkg deb
       run: |
