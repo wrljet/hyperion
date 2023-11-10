@@ -201,7 +201,7 @@ jobs:
       run: |
         cd /usr/local/
         ls -l
-        find -type f -exec md5sum '{}' \;
+        # find -type f -exec md5sum '{}' \;
 
     - name: Create Release Archive
       run: |
