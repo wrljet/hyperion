@@ -258,11 +258,11 @@ jobs:
         #
         # Display what got built and installed
         # FIXME this takes forever
-        # ls -R --format=horizontal /usr/local
+        ls -R --format=horizontal /usr/local/bin
         #
         pushd $PACKAGE_NAME >/dev/null;
         sudo rm -rf usr
-        sudo mkdir -p ./usr/local
+        sudo mkdir -p ./usr/local/bin
         # sudo cp -R /usr/local/ ./usr/local/
         sudo cp /usr/local/bin/cckd2ckd ./usr/local/bin
         sudo cp /usr/local/bin/cckd642ckd ./usr/local/bin
