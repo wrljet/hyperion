@@ -345,6 +345,7 @@ jobs:
         dpkg -b ./$PACKAGE_NAME
         LINUX_DEBNAME="Hercules-$VERSION.deb"
         echo "LINUX_DEBNAME=$LINUX_DEBNAME" >>$GITHUB_ENV
+        mv "$PACKAGE_NAME.deb" $LINUX_DEBNAME
         ls -lh $LINUX_DEBNAME
 
     - name: Test install the new dpkg deb
