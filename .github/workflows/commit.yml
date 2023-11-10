@@ -39,23 +39,20 @@ jobs:
         VERSION=$(./_dynamic_version)
         #
         # Remove double quotes and spaces from Fish's version string
-        echo "VERSION (original): $VERSION"
         VERSION="${VERSION%\"}"
-        echo "VERSION (quotes1): $VERSION"
         VERSION="${VERSION#\"}"
-        echo "VERSION (quotes2): $VERSION"
         VERSION="${VERSION//[[:space:]]/}"
-        echo "VERSION (spaces): $VERSION"
+        echo "VERSION: $VERSION"
         echo "VERSION=$VERSION" >>$GITHUB_ENV
         #
-        # Name and create tarball
-        ZIPFILE="Hercules-$VERSION-Ubuntu-x64.tar.gz"
-        echo "ZIPFILE=$ZIPFILE" >>$GITHUB_ENV
+        # Artifact Names
+        LINUX_TARBALL="Hercules-$VERSION-Ubuntu-x64.tar.gz"
+        echo "LINUX_TARBALL=$LINUX_TARBALL" >>$GITHUB_ENV
 
     - name: Review binaries
       run: |
         ls -l release.zips
-        echo "ZIPFILE: ${{env.ZIPFILE}}"
+        echo "LINUX_TARBALL: ${{env.LINUX_TARBALL}}"
 
     - name: Generate checksums
       uses: jmgilman/actions-generate-checksum@v1
@@ -208,10 +205,10 @@ jobs:
         echo "VERSION=$VERSION" >>$GITHUB_ENV
         #
         # Name and create tarball
-        ZIPFILE="Hercules-$VERSION-Ubuntu-x64.tar.gz"
-        echo "ZIPFILE=$ZIPFILE" >>$GITHUB_ENV
+        LINUX_TARBALL="Hercules-$VERSION-Ubuntu-x64.tar.gz"
+        echo "LINUX_TARBALL=$LINUX_TARBALL" >>$GITHUB_ENV
         # FIXME skipping building this tarball
-        #tar cfz $ZIPFILE /usr/local/$PACKAGE_NAME
+        #tar cfz $LINUX_TARBALL /usr/local/$PACKAGE_NAME
 
     - name: Prepare DPKG
       run: |
@@ -380,7 +377,7 @@ jobs:
 #    - name: Upload build
 #      uses: actions/upload-artifact@v2
 #      with:
-#        path: "${{env.ZIPFILE}}"
+#        path: "${{env.LINUX_TARBALL}}"
 #        name: "release.zips"
 
     - name: Upload dpkg
@@ -547,16 +544,16 @@ jobs:
         echo "DYNAMIC_VERSION: $env:DYNAMIC_VERSION"
         echo "DYNAMIC_VERSION=$env:DYNAMIC_VERSION" >>$env:GITHUB_ENV
         #
-        $env:ZIPFILE="Hercules-$env:DYNAMIC_VERSION-x64.zip"
-        echo "ZIPFILE=$env:ZIPFILE" >>$env:GITHUB_ENV
-        echo $env:ZIPFILE
+        $env:WINDOWS_ZIPFILE="Hercules-$env:DYNAMIC_VERSION-x64.zip"
+        echo "WINDOWS_ZIPFILE=$env:WINDOWS_ZIPFILE" >>$env:GITHUB_ENV
+        echo $env:WINDOWS_ZIPFILE
         dir
         echo " "
         echo "dir .. before zip"
         dir ..
         pushd ..
           # Create a zip file with the contents of msvc.AMD64.bin
-          Compress-Archive -Path hyperion\msvc.AMD64.bin\*.* -DestinationPath "hyperion\$env:ZIPFILE"
+          Compress-Archive -Path hyperion\msvc.AMD64.bin\*.* -DestinationPath "hyperion\$env:WINDOWS_ZIPFILE"
           echo "dir .. after zip"
           dir
         popd
@@ -578,337 +575,7 @@ jobs:
     - name: Upload build
       uses: actions/upload-artifact@v2
       with:
-        path: "${{env.ZIPFILE}}"
+        path: "${{env.WINDOWS_ZIPFILE}}"
         name: "release.zips"
-
-###############
-#  buildOnLinux:
-#
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#      - name: Checkout
-#        uses: actions/checkout@v3.3.0
-#
-#      - name: Get Commit Ref
-#        run: |
-#          pwd
-#          COMMIT_REF=$(git rev-parse --short $GITHUB_SHA)
-#          echo "COMMIT_REF: $COMMIT_REF"
-#          echo "COMMIT_REF=$COMMIT_REF" >>$GITHUB_ENV
-#
-#      - name: Install Packages
-#        run: |
-#          sudo apt-get install git wget time ncat
-#          sudo apt-get install build-essential
-#          sudo apt-get install cmake autoconf automake flex gawk m4
-#          sudo apt-get install libltdl-dev libtool-bin libcap2-bin libbz2-dev zlib1g-dev
-#
-#      - name: Build Regina Rexx (used for testing)
-#        run: |
-#          which rexx && true
-#          export OPT_REGINA_URL="http://www.wrljet.com/ibm360/Regina-REXX-3.6.tar.gz"
-#          export OPT_REGINA_TARFILE="Regina-REXX-3.6.tar.gz"
-#          export OPT_REGINA_DIR="Regina-REXX-3.6"
-#          wget $OPT_REGINA_URL
-#          tar xfz "$OPT_REGINA_TARFILE"
-#          pwd
-#          pushd $OPT_REGINA_DIR
-#          ./configure --libdir=/usr/lib
-#          ./config.status --config
-#          make
-#          sudo make install
-#          popd
-#          which rexx
-#          find /usr -name 'rexxsaa.h' 2>&1
-#
-#      - name: Build External Packages
-#        run: |
-#          ls
-#
-#      - name: Configure
-#        run: |
-#          export TZ='America/New_York'
-#          mkdir build && cd build
-#          CFLAGS=" -frecord-gcc-switches" ../configure --enable-optimization="-g -g3 -ggdb3 -O3 -march=native" --enable-custom="Built with GitHub Actions" --prefix=/usr/local/$VERSION_NAME --enable-regina-rexx
-#          ./config.status --config
-#
-#      - name: Make
-#        run: |
-#          cd build
-#          make clean
-#          make -j3
-#
-#      - name: Run Tests
-#        run: |
-#          cd build
-#          make check
-#
-#      - name: Install
-#        run: |
-#          cd build
-#          sudo make install
-#
-#      - name: Try It Out
-#        run: |
-#          hash -r
-#          cd build
-#          /usr/local/hercules/bin/hercules && true
-#
-#      - name: List Output
-#        run: |
-#          cd /usr/local/hercules
-#          ls -l
-#          find -type f -exec md5sum '{}' \;
-#
-##      - name: Upload Artifact
-##        uses: actions/upload-artifact@v3.1.1
-##        with:
-##          name: SDL-Hyperion-${{env.COMMIT_REF}}-Ubuntu
-##          path: /usr/local/hercules
-#
-#      - name: Create Release Archive
-#        run: |
-#          pwd
-#          VERSION=$(./_dynamic_version)
-#          # Remove double quotes and spaces from Fish's version string
-#          echo "VERSION (original): $VERSION"
-#          VERSION="${VERSION%\"}"
-#          echo "VERSION (quotes1): $VERSION"
-#          VERSION="${VERSION#\"}"
-#          echo "VERSION (quotes2): $VERSION"
-#          VERSION="${VERSION//[[:space:]]/}"
-#          echo "VERSION (spaces): $VERSION"
-#          echo "VERSION=$VERSION" >>$GITHUB_ENV
-#          #
-#          ZIPFILE="Hercules-$VERSION-Ubuntu-x64.tar.gz"
-#          echo "ZIPFILE=$ZIPFILE" >>$GITHUB_ENV
-#          tar cfz $ZIPFILE /usr/local/hercules
-#
-#      - name: Set Title
-#        run: |
-#          echo "Tag: latest-${{github.ref_name}}"
-#          if grep -q "develop" <<< "${{github.ref_name}}"; then
-#            TITLE="SDL-Hyperion Development Snapshot"
-#          else
-#            TITLE="SDL-Hyperion"
-#          fi
-#          echo "Title: $TITLE"
-#          echo "TITLE=$TITLE" >>$GITHUB_ENV
-#
-#      - name: Attach Release Archive
-#        uses: wrljet/actions/packages/automatic-releases@built-packages
-#        with:
-#          repo_token: "${{secrets.GITHUB_TOKEN}}"
-#          automatic_release_tag: "latest-${{github.ref_name}}"
-#          prerelease: true
-#          title: "${{env.TITLE}} latest-${{github.ref_name}}"
-#          files: |
-#            ${{env.ZIPFILE}}
-
-############
-
-#  buildOnMacOS:
-#    runs-on: macOS-12 # Monterey
-#
-#    steps:
-#      - name: Checkout
-#        uses: actions/checkout@v3.3.0
-#
-#      - name: Get Commit Ref
-#        run: |
-#          COMMIT_REF=$(git rev-parse --short $GITHUB_SHA)
-#          echo "COMMIT_REF: $COMMIT_REF"
-#          echo "COMMIT_REF=$COMMIT_REF" >>$GITHUB_ENV
-#          ls -l
-#
-#      - name: Install Packages
-#        run: |
-#          brew install cmake
-#
-#      - name: Build
-#        run: |
-#          uname -a
-#          export TZ='America/New_York'
-#          pwd # /Users/runner/work/hyperion/hyperion
-#          pushd /Users/runner/work/hyperion
-#          git clone https://github.com/wrljet/hercules-helper.git
-#          ls -l
-#          #
-#          GIT_REPO_EXTPKGS="https://github.com/SDL-Hercules-390"
-#          #
-#          rm -rf extpkgs
-#          mkdir extpkgs
-#          pushd extpkgs
-#          #
-#          git clone $GIT_REPO_EXTPKGS/crypto crypto
-#          git clone $GIT_REPO_EXTPKGS/decNumber decNumber
-#          git clone $GIT_REPO_EXTPKGS/SoftFloat SoftFloat
-#          git clone $GIT_REPO_EXTPKGS/telnet telnet
-#          #
-#          popd
-#          #
-#          # ./hercules-helper/hercules-buildall.sh --help
-#          ./hercules-helper/hercules-buildall.sh --auto --homebrew --no-clone --flavor=sdl-hyperion
-#          popd
-
-############
-
-#  buildOnWindows:
-#    runs-on: windows-2022 # Windows Server 2022
-#
-#    steps:
-#      - name: Build System Info
-#        run: |
-#          echo 'Building on Windows Not Implemented Yet'
-#          echo '$psversiontable...'
-#          $psversiontable
-#          echo 'get-computerinfo...'
-#          get-computerinfo
-#          echo "---"
-#          echo "GITHUB_WORKSPACE: $env:GITHUB_WORKSPACE"
-#
-#      - name: Checkout
-#        uses: actions/checkout@v3.3.0
-#
-#      - name: Get Commit Ref
-#        run: |
-#          echo "GITHUB_WORKSPACE: $env:GITHUB_WORKSPACE"
-#          #
-#          # git rev-parse --short $env:GITHUB_SHA
-#          $env:COMMIT_REF = (git rev-parse --short $env:GITHUB_SHA)
-#          echo "COMMIT_REF: $env:COMMIT_REF"
-#          echo "COMMIT_REF=$env:COMMIT_REF" >>$env:GITHUB_ENV
-#          #
-#
-#      - name: Git Clones
-#        run: |
-#          pushd ..
-#            dir
-#            git clone https://github.com/wrljet/hercules-helper-windows.git
-#            # git clone -b develop https://github.com/SDL-Hercules-390/hyperion.git
-#            dir
-#            mkdir hyperion\winbuild
-#            cd hyperion\winbuild
-#            #
-#            $ZIPFILE = "ZLIB1-1.2.11-bin-lib-inc-vc2008-x86-x64.zip"
-#            $URL = "http://www.softdevlabs.com/downloads/$ZIPFILE"
-#            $OutFile = "$ZIPFILE"
-#            Invoke-WebRequest -URI $URL -OutFile $OutFile
-#            Expand-Archive -Path $ZIPFILE -DestinationPath "zlib"
-#            #
-#            $ZIPFILE ="BZIP2-1.0.6-bin-lib-inc-vc2008-x86-x64.zip"
-#            $URL = "http://www.softdevlabs.com/downloads/$ZIPFILE"
-#            $OutFile = "$ZIPFILE"
-#            Invoke-WebRequest -URI $URL -OutFile $OutFile
-#            Expand-Archive -Path $ZIPFILE -DestinationPath "bzip2"
-#            #
-#            $ZIPFILE = "PCRE-6.4.1-bin-lib-inc-vc2008-x86-x64.zip"
-#            $URL = "http://www.softdevlabs.com/downloads/$ZIPFILE"
-#            $OutFile = "$ZIPFILE"
-#            Invoke-WebRequest -URI $URL -OutFile $OutFile
-#            Expand-Archive -Path $ZIPFILE -DestinationPath "pcre"
-#            #
-#            # D:\a\hyperion\hyperion\winbuild
-#            dir
-#            #
-#          popd
-#          dir
-#
-#      - name: Command Shell
-#        shell: cmd
-#        run: |
-#          dir
-#          dir ..
-#          echo GITHUB_SHA: %GITHUB_SHA%
-#          set "git_hash=-gHHHHHHH"
-#          for /f %%a in ('git rev-parse --short HEAD') do set "COMMIT_REF=%%a"
-#          echo GIT_HASH: %COMMIT_REF%
-#          ::
-#          pushd ..
-#            dir
-#          ::
-#            rem dir "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build"
-#          ::
-#            set HERCULES_HELPER_BUILD_DIR=%cd%\hyperion
-#            echo HERCULES_HELPER_BUILD_DIR: %HERCULES_HELPER_BUILD_DIR%
-#          ::
-#            set HERCULES_HELPER_VCVARS_CMD=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat
-#          ::
-#            pushd "%HERCULES_HELPER_BUILD_DIR%"
-#              set HERCULES_BUILD_DIR=%cd%\msvc.AMD64.bin
-#              call "%HERCULES_HELPER_VCVARS_CMD%"
-#              :: set /P dummy=
-#              ::
-#              call _dynamic_version.cmd
-#              :: Remove double quotes and spaces from Fish's version string
-#              set VERSION=%VERSION:"=%
-#              set VERSION=%VERSION: =%
-#              echo Build version info: %VERSION%
-#              echo %VERSION% > ..\DYNAMIC_VERSION
-#              ::
-#              call makefile.bat RETAIL-X64 makefile.msvc 8 -title "*** GitHub Actions Build ***" -a
-#            popd
-#          popd
-#
-#      - name: Create Release Archive
-#        run: |
-#          echo "COMMIT_REF: $env:COMMIT_REF"
-#          #
-#          $env:DYNAMIC_VERSION = (Get-Content "../DYNAMIC_VERSION").Trim()
-#          echo "DYNAMIC_VERSION: $env:DYNAMIC_VERSION"
-#          echo "DYNAMIC_VERSION=$env:DYNAMIC_VERSION" >>$env:GITHUB_ENV
-#          #
-#          $env:ZIPFILE="Hercules-$env:DYNAMIC_VERSION-x64.zip"
-#          echo "ZIPFILE=$env:ZIPFILE" >>$env:GITHUB_ENV
-#          echo $env:ZIPFILE
-#          dir
-#          echo " "
-#          echo "dir .. before zip"
-#          dir ..
-#          pushd ..
-#            # Create a zip file with the contents of msvc.AMD64.bin
-#            Compress-Archive -Path hyperion\msvc.AMD64.bin\*.* -DestinationPath "hyperion\$env:ZIPFILE"
-#            echo "dir .. after zip"
-#            dir
-#          popd
-#
-#      - name: Set Title
-#        run: |
-#          echo "Tag: latest-${{github.ref_name}}"
-#          # if grep -q "develop" <<< "${{github.ref_name}}"; then
-#            $env:TITLE="SDL-Hyperion Development Snapshot"
-#          # else
-#          #  $env:TITLE="SDL-Hyperion"
-#          # fi
-#          echo "Title: $env:TITLE"
-#          echo "TITLE=$env:TITLE" >>$env:GITHUB_ENV
-#          dir
-#          echo "dir .."
-#          dir ..
-#
-#      - name: Upload build
-#        uses: actions/upload-artifact@v2
-#        with:
-#          path: "${{env.ZIPFILE}}"
-#          name: "release.zips"
-#
-#      - name: Download binaries
-#        uses: actions/download-artifact@v2
-#
-#      - name: Review binaries
-#        run: |
-#          dir
-#          dir release.zips
-#
-#      - name: Attach Release Archive
-#        uses: wrljet/actions/packages/automatic-releases@built-packages
-#        with:
-#          repo_token: "${{secrets.GITHUB_TOKEN}}"
-#          automatic_release_tag: "latest-${{github.ref_name}}"
-#          prerelease: true
-#          title: "${{env.TITLE}} ${{github.ref_name}}"
-#          files: |
-#            release.zips
 
 ### END ###
