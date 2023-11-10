@@ -21,12 +21,6 @@ jobs:
 #     with:
 #       name: "release.zips"
 
-    - name: Review binaries
-      run: |
-        ls -l
-        ls -l release.zips
-        echo "ZIPFILE: ${{env.ZIPFILE}}"
-
     - name: Set Title
       run: |
         echo "Tag: latest-${{github.ref_name}}"
@@ -39,8 +33,31 @@ jobs:
         echo "Title: $TITLE"
         echo "TITLE=$TITLE" >>$GITHUB_ENV
         #
+        pwd
+        #
+        # Create Fish style release name
+        VERSION=$(./_dynamic_version)
+        #
+        # Remove double quotes and spaces from Fish's version string
+        echo "VERSION (original): $VERSION"
+        VERSION="${VERSION%\"}"
+        echo "VERSION (quotes1): $VERSION"
+        VERSION="${VERSION#\"}"
+        echo "VERSION (quotes2): $VERSION"
+        VERSION="${VERSION//[[:space:]]/}"
+        echo "VERSION (spaces): $VERSION"
+        echo "VERSION=$VERSION" >>$GITHUB_ENV
+        #
+        # Name and create tarball
+        ZIPFILE="Hercules-$VERSION-Ubuntu-x64.tar.gz"
+        echo "ZIPFILE=$ZIPFILE" >>$GITHUB_ENV
 
-    - name: Generate checksum
+    - name: Review binaries
+      run: |
+        ls -l release.zips
+        echo "ZIPFILE: ${{env.ZIPFILE}}"
+
+    - name: Generate checksums
       uses: jmgilman/actions-generate-checksum@v1
       with:
         patterns: |
@@ -193,8 +210,8 @@ jobs:
         # Name and create tarball
         ZIPFILE="Hercules-$VERSION-Ubuntu-x64.tar.gz"
         echo "ZIPFILE=$ZIPFILE" >>$GITHUB_ENV
+        # FIXME skipping building this tarball
         #tar cfz $ZIPFILE /usr/local/$PACKAGE_NAME
-        ls -l
 
     - name: Prepare DPKG
       run: |
@@ -212,7 +229,7 @@ jobs:
         #SCRIPT_DIR="$(dirname $SCRIPT_PATH)"
         SCRIPT_DIR=~/hercules-helper
         echo "SCRIPT_DIR=$SCRIPT_DIR"
-        ls -l $SCRIPT_DIR
+        #
         dpkg_src="$SCRIPT_DIR/packagers/debian/$PACKAGE_NAME"   # hercules-helper/packagers/debian/hyperion-4.4
         echo "dpkg_src=$dpkg_src"
         #
@@ -227,7 +244,7 @@ jobs:
         #
         # Display what got built and installed
         # FIXME this takes forever
-        ls -R --format=horizontal /usr/local/bin
+        #ls -R --format=horizontal /usr/local/bin
         #
         pushd $PACKAGE_NAME >/dev/null;
         sudo rm -rf usr
@@ -325,7 +342,6 @@ jobs:
         #
         echo "Create the Debian package"
         pwd
-        ls
         dpkg -b ./$PACKAGE_NAME
         ls -lh $PACKAGE_NAME.deb
 
