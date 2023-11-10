@@ -48,11 +48,14 @@ jobs:
         # Artifact Names
         LINUX_TARBALL="Hercules-$VERSION-Ubuntu-x64.tar.gz"
         echo "LINUX_TARBALL=$LINUX_TARBALL" >>$GITHUB_ENV
+        LINUX_DEBNAME="Hercules-$VERSION.deb"
+        echo "LINUX_DEBNAME=$LINUX_DEBNAME" >>$GITHUB_ENV
 
     - name: Review binaries
       run: |
         ls -l release.zips
         echo "LINUX_TARBALL: ${{env.LINUX_TARBALL}}"
+        echo "LINUX_DEBNAME: ${{env.LINUX_DEBNAME}}"
 
     - name: Generate checksums
       uses: jmgilman/actions-generate-checksum@v1
@@ -340,13 +343,14 @@ jobs:
         echo "Create the Debian package"
         pwd
         dpkg -b ./$PACKAGE_NAME
-        ls -lh $PACKAGE_NAME.deb
+        LINUX_DEBNAME="Hercules-$VERSION.deb"
+        ls -lh $LINUX_DEBNAME.deb
 
     - name: Test install the new dpkg deb
       run: |
         echo "pwd = $(pwd)"
         echo "dpkg --install ..."
-        sudo dpkg --install $PACKAGE_NAME.deb
+        sudo dpkg --install $LINUX_DEBNAME
         echo
         # FIXME -dev is in 'control' file
         echo "dpkg -L ..."
@@ -359,7 +363,7 @@ jobs:
         hercules --version
         #
         echo "dpkg-deb -f ..."
-        dpkg-deb -f "$PACKAGE_NAME.deb"
+        dpkg-deb -f "$LINUX_DEBNAME
         #
         echo "dpkg-deb -s ..."
         # FIXME
@@ -372,7 +376,7 @@ jobs:
 
     - name: Create dpkg sha256 
       run: |
-        curl -sL "$PACKAGE_NAME.deb" | shasum -a 256 | cut -d " " -f 1
+        curl -sL "$LINUX_DEBNAME" | shasum -a 256 | cut -d " " -f 1
 
 #    - name: Upload build
 #      uses: actions/upload-artifact@v2
@@ -383,7 +387,7 @@ jobs:
     - name: Upload dpkg
       uses: actions/upload-artifact@v2
       with:
-        path: "${{env.PACKAGE_NAME}}.deb"
+        path: "${{env.LINUX_DEBNAME}}"
         name: "release.zips"
 
 ########
