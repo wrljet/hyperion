@@ -391,11 +391,11 @@ jobs:
       run: |
         curl -sL "$PACKAGE_NAME.deb" | shasum -a 256 | cut -d " " -f 1
 
-    - name: Upload build
-      uses: actions/upload-artifact@v2
-      with:
-        path: "${{env.ZIPFILE}}"
-        name: "release.zips"
+#    - name: Upload build
+#      uses: actions/upload-artifact@v2
+#      with:
+#        path: "${{env.ZIPFILE}}"
+#        name: "release.zips"
 
     - name: Upload dpkg
       uses: actions/upload-artifact@v2
