@@ -165,7 +165,7 @@ jobs:
       run: |
         export TZ='America/New_York'
         mkdir build && cd build
-        CFLAGS=" -frecord-gcc-switches" ../configure --enable-optimization="-g -g3 -ggdb3 -O3 -march=native" --enable-custom="Built with GitHub Actions" --prefix=/usr/local/$PACKAGE_NAME --enable-regina-rexx
+        CFLAGS=" -frecord-gcc-switches" ../configure --enable-optimization="-g -g3 -ggdb3 -O3 -march=x86_64" --enable-custom="Built with GitHub Actions" --prefix=/usr/local/$PACKAGE_NAME --enable-regina-rexx
         ./config.status --config
 
     - name: Make
