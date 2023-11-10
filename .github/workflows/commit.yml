@@ -257,7 +257,8 @@ jobs:
         echo "Copy everything locally; correct libs dir"
         #
         # Display what got built and installed
-        ls -R --format=horizontal /usr/local
+        # FIXME this takes forever
+        # ls -R --format=horizontal /usr/local
         #
         pushd $PACKAGE_NAME >/dev/null;
         sudo rm -rf usr
