@@ -184,7 +184,7 @@ jobs:
         cd build
         sudo make install
         #
-        install_prefix=/usr/local/$PACKAGE_NAME
+        install_prefix=/usr/local
         sudo setcap 'cap_sys_nice=eip' $install_prefix/bin/hercules
         sudo setcap 'cap_sys_nice=eip' $install_prefix/bin/herclin
         sudo setcap 'cap_net_admin+ep' $install_prefix/bin/hercifc
@@ -194,7 +194,7 @@ jobs:
       run: |
         hash -r
         cd build
-        /usr/local/$PACKAGE_NAME/bin/hercules && true
+        /usr/local/bin/hercules && true
 
     - name: List Output
       run: |
