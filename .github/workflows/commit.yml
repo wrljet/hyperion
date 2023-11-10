@@ -32,11 +32,13 @@ jobs:
         echo "Tag: latest-${{github.ref_name}}"
         if grep -q "develop" <<< "${{github.ref_name}}"; then
           TITLE="Hercules Development Snapshot"
-        else
+        elif grep -q "workflow" <<< "${{github.ref_name}}"; then
+          TITLE="Hercules Development Snapshot"
           TITLE="Hercules"
         fi
         echo "Title: $TITLE"
         echo "TITLE=$TITLE" >>$GITHUB_ENV
+        #
 
     - name: Generate checksum
       uses: jmgilman/actions-generate-checksum@v1
@@ -51,43 +53,10 @@ jobs:
         repo_token: "${{secrets.GITHUB_TOKEN}}"
         automatic_release_tag: "latest-${{github.ref_name}}"
         prerelease: true
-        title: "${{env.TITLE}} latest-${{github.ref_name}}"
+        title: "${{env.TITLE}} ${{env.VERSION}}"
         files: |
           checksum.txt
           release.zips
-
-#    - name: Upload linux
-#      id: upload-linux
-#      uses: actions/upload-release-asset@v1.0.1
-#      env:
-#        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#      with:
-#        upload_url: ${{ steps.create_release.outputs.upload_url }}
-#        asset_path: ./uploads/$ZIPFILE
-#        asset_name: $ZIPFILE
-#        asset_content_type: application/gzip   
-#
-#    - name: upload macos
-#      id: upload-macos 
-#      uses: actions/upload-release-asset@v1.0.1
-#      env:
-#        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#      with:
-#        upload_url: ${{ steps.create_release.outputs.upload_url }}
-#        asset_path: ./uploads/macos.zip
-#        asset_name: macos.zip
-#        asset_content_type: application/zip  
-#
-#    - name: upload windows
-#      id: upload-windows
-#      uses: actions/upload-release-asset@v1.0.1
-#      env:
-#        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#      with:
-#        upload_url: ${{ steps.create_release.outputs.upload_url }}
-#        asset_path: ./uploads/windows.zip
-#        asset_name: windows.zip
-#        asset_content_type: application/zip
 
 ########
   build-linux:
@@ -595,118 +564,6 @@ jobs:
       with:
         path: "${{env.ZIPFILE}}"
         name: "release.zips"
-
-#    runs-on: ${{ matrix.os }}
-#
-#    steps:
-#      - name: System Information
-#        run: |
-#            echo '$psversiontable...'
-#        if: env.RUNNER_OS 
-#
-#      - name: System Information
-#        run: |
-#          if [ "$RUNNER_OS" = "Linux" ]; then
-#            uname -a
-#            cat /etc/os-release
-#          elif [ "$RUNNER_OS" = "macOS" ]; then
-#            uname -a
-#          elif [ "$RUNNER_OS" = "Windows" ]; then
-#            echo '$psversiontable...'
-#            $psversiontable
-#            echo 'get-computerinfo...'
-#            get-computerinfo
-#            echo "---"
-#            echo "GITHUB_WORKSPACE: $env:GITHUB_WORKSPACE"
-#          else
-#            echo Unsupported RUNNER_OS=$RUNNER_OS
-#            exit 1
-#          fi
-#
-#      - name: Install dependencies
-#        run: |
-#          if [ "$RUNNER_OS" = "Linux" ]; then
-#            sudo apt-get install git wget time ncat
-#            sudo apt-get install build-essential
-#            sudo apt-get install cmake autoconf automake flex gawk m4
-#            sudo apt-get install libltdl-dev libtool-bin libcap2-bin libbz2-dev zlib1g-dev
-#          elif [ "$RUNNER_OS" = "macOS" ]; then
-#            brew install cmake
-#          else
-#            echo Unsupported RUNNER_OS=$RUNNER_OS
-#            exit 1
-#          fi
-#
-#      - name: Checkout code
-#        uses: actions/checkout@v3.3.0
-#
-#      - name: Get Commit Ref
-#        run: |
-#          if [ "$RUNNER_OS" = "Linux" ]; then
-#            pwd
-#            COMMIT_REF=$(git rev-parse --short $GITHUB_SHA)
-#            echo "COMMIT_REF: $COMMIT_REF"
-#            echo "COMMIT_REF=$COMMIT_REF" >>$GITHUB_ENV
-#          elif [ "$RUNNER_OS" = "macOS" ]; then
-#            COMMIT_REF=$(git rev-parse --short $GITHUB_SHA)
-#            echo "COMMIT_REF: $COMMIT_REF"
-#            echo "COMMIT_REF=$COMMIT_REF" >>$GITHUB_ENV
-#            ls -l
-#          else
-#            echo Unsupported RUNNER_OS=$RUNNER_OS
-#            exit 1
-#          fi
-#
-#      - name: Build Regina Rexx (used for testing)
-#        run: |
-#          if [ "$RUNNER_OS" = "Linux" ]; then
-#            which rexx && true
-#            export OPT_REGINA_URL="http://www.wrljet.com/ibm360/Regina-REXX-3.6.tar.gz"
-#            export OPT_REGINA_TARFILE="Regina-REXX-3.6.tar.gz"
-#            export OPT_REGINA_DIR="Regina-REXX-3.6"
-#            wget $OPT_REGINA_URL
-#            tar xfz "$OPT_REGINA_TARFILE"
-#            pwd
-#            pushd $OPT_REGINA_DIR
-#            ./configure --libdir=/usr/lib
-#            ./config.status --config
-#            make
-#            sudo make install
-#            popd
-#            which rexx
-#            find /usr -name 'rexxsaa.h' 2>&1
-#          elif [ "$RUNNER_OS" = "macOS" ]; then
-#            echo "FIXME -- Skip building Rexx on macOS"
-#          else
-#            echo "Unsupported RUNNER_OS=$RUNNER_OS"
-#            exit 1
-#          fi
-#
-#      - name: Build External Packages
-#        run: |
-#          if [ "$RUNNER_OS" = "Linux" ]; then
-#            ls
-#          elif [ "$RUNNER_OS" = "macOS" ]; then
-#            echo "Not yet supported $RUNNER_OS"
-#            exit 1
-#          else
-#            echo "Unsupported RUNNER_OS=$RUNNER_OS"
-#            exit 1
-#          fi
-#
-#      - name: Upload Linux release build
-#        uses: actions/upload-artifact@v2
-#        if: ${{ matrix.os == 'ubuntu-latest' }}
-#        with:
-#          name: ffs.linux
-#          path: target/release/ffs            
-#
-#      - name: Upload macOS release build
-#        uses: actions/upload-artifact@v2
-#        if: ${{ matrix.os == 'macos-latest' }}
-#        with:
-#          name: ffs.macos
-#          path: target/release/ffs
 
 ###############
 #  buildOnLinux:
