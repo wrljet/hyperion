@@ -333,7 +333,7 @@ jobs:
         sudo cp /usr/local/lib/libhercu.la ./usr/local/lib/
         sudo cp /usr/local/lib/libhercu.so ./usr/local/lib/
         #
-        sudo cp -R /usr/local/lib/share/hercules/ ./usr/local/share/
+        sudo cp -R /usr/local/share/hercules/ ./usr/local/share/
         #
         #sudo mv ./usr/local/lib/hercules/* ./usr/local/lib
         #
