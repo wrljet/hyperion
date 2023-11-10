@@ -165,7 +165,7 @@ jobs:
       run: |
         export TZ='America/New_York'
         mkdir build && cd build
-        CFLAGS=" -frecord-gcc-switches" ../configure --enable-optimization="-g -g3 -ggdb3 -O3 -march=x86-64-v2" --enable-custom="Built with GitHub Actions" --prefix=/usr/local/$PACKAGE_NAME --enable-regina-rexx
+        CFLAGS=" -frecord-gcc-switches" ../configure --enable-optimization="-g -g3 -ggdb3 -O3 -march=x86-64-v2" --enable-custom="Built with GitHub Actions" --prefix=/usr/local --enable-regina-rexx
         ./config.status --config
 
     - name: Make
@@ -222,7 +222,7 @@ jobs:
         # Name and create tarball
         ZIPFILE="Hercules-$VERSION-Ubuntu-x64.tar.gz"
         echo "ZIPFILE=$ZIPFILE" >>$GITHUB_ENV
-        tar cfz $ZIPFILE /usr/local/$PACKAGE_NAME
+        #tar cfz $ZIPFILE /usr/local/$PACKAGE_NAME
         ls -l
 
     - name: Prepare DPKG
@@ -255,12 +255,81 @@ jobs:
         echo "Copy everything locally; correct libs dir"
         #
         # Display what got built and installed
-        ls -R --format=horizontal /usr/local/$PACKAGE_NAME
+        ls -R --format=horizontal /usr/local
         #
         pushd $PACKAGE_NAME >/dev/null;
         sudo rm -rf usr
         sudo mkdir -p ./usr/local
-        sudo cp -R /usr/local/$PACKAGE_NAME/* ./usr/local/
+        # sudo cp -R /usr/local/ ./usr/local/
+        sudo cp /usr/local/bin/cckd2ckd ./usr/local/
+        sudo cp /usr/local/bin/cckd642ckd ./usr/local/
+        sudo cp /usr/local/bin/cckdcdsk ./usr/local/
+        sudo cp /usr/local/bin/cckdcdsk64 ./usr/local/
+        sudo cp /usr/local/bin/cckdcomp ./usr/local/
+        sudo cp /usr/local/bin/cckdcomp64 ./usr/local/
+        sudo cp /usr/local/bin/cckddiag ./usr/local/
+        sudo cp /usr/local/bin/cckddiag64 ./usr/local/
+        sudo cp /usr/local/bin/cckdmap ./usr/local/
+        sudo cp /usr/local/bin/cckdswap ./usr/local/
+        sudo cp /usr/local/bin/cckdswap64 ./usr/local/
+        sudo cp /usr/local/bin/cfba2fba ./usr/local/
+        sudo cp /usr/local/bin/cfba642fba ./usr/local/
+        sudo cp /usr/local/bin/ckd2cckd ./usr/local/
+        sudo cp /usr/local/bin/ckd2cckd64 ./usr/local/
+        sudo cp /usr/local/bin/convto64 ./usr/local/
+        sudo cp /usr/local/bin/dasdcat ./usr/local/
+        sudo cp /usr/local/bin/dasdconv ./usr/local/
+        sudo cp /usr/local/bin/dasdconv64 ./usr/local/
+        sudo cp /usr/local/bin/dasdcopy ./usr/local/
+        sudo cp /usr/local/bin/dasdcopy64 ./usr/local/
+        sudo cp /usr/local/bin/dasdinit ./usr/local/
+        sudo cp /usr/local/bin/dasdinit64 ./usr/local/
+        sudo cp /usr/local/bin/dasdisup ./usr/local/
+        sudo cp /usr/local/bin/dasdlist ./usr/local/
+        sudo cp /usr/local/bin/dasdload ./usr/local/
+        sudo cp /usr/local/bin/dasdload64 ./usr/local/
+        sudo cp /usr/local/bin/dasdls ./usr/local/
+        sudo cp /usr/local/bin/dasdpdsu ./usr/local/
+        sudo cp /usr/local/bin/dasdseq ./usr/local/
+        sudo cp /usr/local/bin/dasdser ./usr/local/
+        sudo cp /usr/local/bin/dmap2hrc ./usr/local/
+        sudo cp /usr/local/bin/fba2cfba ./usr/local/
+        sudo cp /usr/local/bin/fba2cfba64 ./usr/local/
+        sudo cp /usr/local/bin/hercifc ./usr/local/
+        sudo cp /usr/local/bin/herclin ./usr/local/
+        sudo cp /usr/local/bin/hercules ./usr/local/
+        sudo cp /usr/local/bin/hetget ./usr/local/
+        sudo cp /usr/local/bin/hetinit ./usr/local/
+        sudo cp /usr/local/bin/hetmap ./usr/local/
+        sudo cp /usr/local/bin/hetupd ./usr/local/
+        sudo cp /usr/local/bin/maketape ./usr/local/
+        sudo cp /usr/local/bin/regina ./usr/local/
+        sudo cp /usr/local/bin/regina-config ./usr/local/
+        sudo cp /usr/local/bin/rexx ./usr/local/
+        sudo cp /usr/local/bin/rxqueue ./usr/local/
+        sudo cp /usr/local/bin/rxstack ./usr/local/
+        sudo cp /usr/local/bin/tapecopy ./usr/local/
+        sudo cp /usr/local/bin/tapemap ./usr/local/
+        sudo cp /usr/local/bin/tapesplt ./usr/local/
+        sudo cp /usr/local/bin/tfprint ./usr/local/
+        sudo cp /usr/local/bin/tfswap ./usr/local/
+        sudo cp /usr/local/bin/txt2card ./usr/local/
+        sudo cp /usr/local/bin/vmfplc2 ./usr/local/
+        #
+        sudo cp -R /usr/local/lib/hercules/ ./usr/local/lib/
+        sudo cp /usr/local/lib/libhdt3420_not_mod.la ./usr/local/lib/
+        sudo cp /usr/local/lib/libhdt3420_not_mod.so ./usr/local/lib/
+        sudo cp /usr/local/lib/libhercd.la ./usr/local/lib/
+        sudo cp /usr/local/lib/libhercd.so ./usr/local/lib/
+        sudo cp /usr/local/lib/libherc.la ./usr/local/lib/
+        sudo cp /usr/local/lib/libhercs.la ./usr/local/lib/
+        sudo cp /usr/local/lib/libherc.so ./usr/local/lib/
+        sudo cp /usr/local/lib/libhercs.so ./usr/local/lib/
+        sudo cp /usr/local/lib/libherct.la ./usr/local/lib/
+        sudo cp /usr/local/lib/libherct.so ./usr/local/lib/
+        sudo cp /usr/local/lib/libhercu.la ./usr/local/lib/
+        sudo cp /usr/local/lib/libhercu.so ./usr/local/lib/
+        #
         #sudo mv ./usr/local/lib/hercules/* ./usr/local/lib
         #
         #sudo mkdir -p ./usr/local/lib
