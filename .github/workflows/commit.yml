@@ -61,6 +61,7 @@ jobs:
       uses: jmgilman/actions-generate-checksum@v1
       with:
         patterns: |
+          release.zips/*.deb
           release.zips/*.zip
           release.zips/*.tar.gz
 
