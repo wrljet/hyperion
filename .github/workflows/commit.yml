@@ -192,6 +192,7 @@ jobs:
 
     - name: Try It Out
       run: |
+        sudo ldconfig
         hash -r
         cd build
         /usr/local/bin/hercules && true
@@ -329,6 +330,8 @@ jobs:
         sudo cp /usr/local/lib/libherct.so ./usr/local/lib/
         sudo cp /usr/local/lib/libhercu.la ./usr/local/lib/
         sudo cp /usr/local/lib/libhercu.so ./usr/local/lib/
+        #
+        sudo cp -R /usr/local/lib/share/hercules/ ./usr/local/share/
         #
         #sudo mv ./usr/local/lib/hercules/* ./usr/local/lib
         #
