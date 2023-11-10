@@ -199,7 +199,7 @@ jobs:
 
     - name: List Output
       run: |
-        cd /usr/local/$PACKAGE_NAME
+        cd /usr/local/
         ls -l
         find -type f -exec md5sum '{}' \;
 
