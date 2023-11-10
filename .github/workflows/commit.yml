@@ -319,7 +319,7 @@ jobs:
         sudo cp /usr/local/bin/txt2card ./usr/local/bin
         sudo cp /usr/local/bin/vmfplc2 ./usr/local/bin
         #
-        sudo cp -R /usr/local/lib/hercules/ ./usr/local/lib/
+        sudo cp -R /usr/local/lib/hercules ./usr/local/lib/hercules
         sudo cp /usr/local/lib/libhdt3420_not_mod.la ./usr/local/lib/
         sudo cp /usr/local/lib/libhdt3420_not_mod.so ./usr/local/lib/
         sudo cp /usr/local/lib/libhercd.la ./usr/local/lib/
