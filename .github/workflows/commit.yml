@@ -201,6 +201,7 @@ jobs:
       run: |
         cd /usr/local/
         ls -l
+        # FIXME this takes forever
         # find -type f -exec md5sum '{}' \;
 
     - name: Create Release Archive
