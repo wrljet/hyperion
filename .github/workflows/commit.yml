@@ -365,7 +365,7 @@ jobs:
         hercules --version
         #
         echo "dpkg-deb -f ..."
-        dpkg-deb -f "$LINUX_DEBNAME
+        dpkg-deb -f "$LINUX_DEBNAME"
         #
         echo "dpkg-deb -s ..."
         # FIXME
