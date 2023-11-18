@@ -685,10 +685,10 @@ jobs:
             #
             echo "Platform Bitness : $OS_BITFLAG"
             #
-            export OPT_BUILD_DIR=/sandbox/herctest
+            export OPT_BUILD_DIR=/hyperion/herctest
             export OPT_INSTALL_DIR="/usr/local"
             #
-            export SCRIPT_DIR=/sandbox/hercules-helper
+            export SCRIPT_DIR=/hyperion/hercules-helper
             export OPT_REGINA_DIR="Regina-REXX-3.6"
             export OPT_REGINA_TARFILE="Regina-REXX-3.6.tar.gz"
             export OPT_REGINA_URL="http://www.wrljet.com/ibm360/Regina-REXX-3.6.tar.gz"
@@ -1025,7 +1025,7 @@ jobs:
             echo
             cd -
             pwd
-            # /sandbox/herctest/hyperion/hyperion-4.7
+            # /hyperion/herctest/hyperion/hyperion-4.7
             #
             sudo chown root:root -R ./$PACKAGE_NAME
             #
@@ -1041,7 +1041,7 @@ jobs:
             ls -lh $LINUX_DEBNAME
             #
             # Test install the new dpkg deb
-            # pwd = /sandbox/herctest/hyperion
+            # pwd = /hyperion/herctest/hyperion
             echo "pwd = $(pwd)"
             #
             # sudo dpkg --install Hercules-4.7.0.11032-SDL-DEV-g4f007805.deb
@@ -1074,17 +1074,17 @@ jobs:
             curl -sL "$LINUX_DEBNAME" | shasum -a 256 | cut -d " " -f 1
             #
             # Copy .deb to upload directory
-            mkdir -p /sandbox/uploads
-            cp $LINUX_DEBNAME /sandbox/uploads
+            mkdir -p /hyperion/uploads
+            cp $LINUX_DEBNAME /hyperion/uploads
             cp $LINUX_DEBNAME uploads
 
     - name: Inspect results
       run: |
-        # reports: /home/runner/work/sandbox/sandbox
+        # reports: /home/runner/work/hyperion/hyperion
         pwd
         ls -lh /home/runner/work
-        #ls -lh /home/runner/work/sandbox
-        #ls -lh /home/runner/work/sandbox/sandbox
+        #ls -lh /home/runner/work/hyperion
+        #ls -lh /home/runner/work/hyperion/hyperion
         #ls -lh /tmp
         ls -lh /tmp/uploads
         #
