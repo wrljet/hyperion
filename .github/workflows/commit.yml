@@ -238,6 +238,9 @@ jobs:
         sudo cp ./$PACKAGE_NAME/DEBIAN/control ./$PACKAGE_NAME/DEBIAN/control.orig
         # must 'sudo sh -c' to get the redirection to run as root
         sudo sh -c "sed 's/Version:.*$/Version: $hercules_vers/' ./$PACKAGE_NAME/DEBIAN/control.orig > ./$PACKAGE_NAME/DEBIAN/control"
+        #
+        sudo sh -c "sed 's/Architecture:.*$/Architecture: amd64/' ./$PACKAGE_NAME/DEBIAN/control.orig > ./$PACKAGE_NAME/DEBIAN/control"
+        #
         cat ./$PACKAGE_NAME/DEBIAN/control
         #
         echo "Copy everything locally; correct libs dir"
