@@ -14,6 +14,14 @@ run-name: ${{ github.actor }} is doing a develop build
 #          base_image: raspios_lite:latest
 #          cpu_info: cpuinfo/raspberrypi_3b
 
+# Uploaded artifacts:
+# Windows
+# Hercules-4.7.0.1-SDL-DEV-g042bc23-x64.zip
+# Debian X86-64
+# Hercules-4.7.0.1-SDL-DEV-g042bc23.deb
+# Debian ARM64
+# Hercules-4.7.0.11032-SDL-DEV-g4f007805.deb
+
 on:
   push:
     branches:
@@ -363,7 +371,7 @@ jobs:
         echo "Create the Debian package"
         pwd
         dpkg -b ./$PACKAGE_NAME
-        LINUX_DEBNAME="Hercules-$VERSION.deb"
+        LINUX_DEBNAME="Hercules-$VERSION-amd64.deb"
         echo "LINUX_DEBNAME=$LINUX_DEBNAME" >>$GITHUB_ENV
         mv "$PACKAGE_NAME.deb" $LINUX_DEBNAME
         ls -lh $LINUX_DEBNAME
@@ -371,7 +379,7 @@ jobs:
     - name: Test install the new dpkg deb
       run: |
         echo "pwd = $(pwd)"
-        echo "dpkg --install ..."
+        echo "dpkg --install $LINUX_DEBNAME"
         sudo dpkg --install $LINUX_DEBNAME
         echo
         # FIXME -dev is in 'control' file
@@ -384,14 +392,14 @@ jobs:
         which hercules
         hercules --version
         #
-        echo "dpkg-deb -f ..."
+        echo "dpkg-deb -f $LINUX_DEBNAME"
         dpkg-deb -f "$LINUX_DEBNAME"
         #
-        echo "dpkg-deb -s ..."
+        echo "dpkg-deb -s $LINUX_DEBNAME"
         # FIXME
         dpkg -s "$PACKAGE_NAME-dev"
         #
-        echo "dpkg-deb -l ..."
+        echo "dpkg-deb -l $PACKAGE_NAME-dev"
         # FIXME
         dpkg -l "$PACKAGE_NAME-dev"
         #
@@ -399,12 +407,6 @@ jobs:
     - name: Create dpkg sha256 
       run: |
         curl -sL "$LINUX_DEBNAME" | shasum -a 256 | cut -d " " -f 1
-
-#    - name: Upload build
-#      uses: actions/upload-artifact@v2
-#      with:
-#        path: "${{env.LINUX_TARBALL}}"
-#        name: "release.zips"
 
     - name: Upload dpkg
       uses: actions/upload-artifact@v2
@@ -1035,8 +1037,8 @@ jobs:
             echo "Create the Debian package"
             pwd
             dpkg -b ./$PACKAGE_NAME
-            LINUX_DEBNAME="Hercules-$VERSION.deb"
-            echo "LINUX_DEBNAME=Hercules-$VERSION.deb"
+            LINUX_DEBNAME="Hercules-$VERSION-aarch64.deb"
+            echo "LINUX_DEBNAME=$LINUX_DEBNAME"
             mv "$PACKAGE_NAME.deb" $LINUX_DEBNAME
             ls -lh $LINUX_DEBNAME
             #
