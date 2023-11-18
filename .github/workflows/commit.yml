@@ -698,8 +698,11 @@ jobs:
             export GIT_REPO_EXTPKGS="https://github.com/SDL-Hercules-390"
             export GIT_BRANCH_EXTPKGS=""
             #
-            # reports: /sandbox
+            # reports: /hyperion
             echo "pwd = $(pwd)"
+            #
+            ls -lh
+            ls -lh /
             #
             # Create output directory
             mkdir -p uploads
