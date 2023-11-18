@@ -16,11 +16,11 @@ run-name: ${{ github.actor }} is doing a develop build
 
 # Uploaded artifacts:
 # Windows
-# Hercules-4.7.0.1-SDL-DEV-g042bc23-x64.zip
+# Hercules-4.7.0.1-SDL-DEV-g042bc23-win64.zip
 # Debian X86-64
-# Hercules-4.7.0.1-SDL-DEV-g042bc23.deb
+# Hercules-4.7.0.1-SDL-DEV-g042bc23-amd64.deb
 # Debian ARM64
-# Hercules-4.7.0.11032-SDL-DEV-g4f007805.deb
+# Hercules-4.7.0.11032-SDL-DEV-g4f007805-aarch64.deb
 
 on:
   push:
@@ -572,7 +572,7 @@ jobs:
         echo "DYNAMIC_VERSION: $env:DYNAMIC_VERSION"
         echo "DYNAMIC_VERSION=$env:DYNAMIC_VERSION" >>$env:GITHUB_ENV
         #
-        $env:WINDOWS_ZIPFILE="Hercules-$env:DYNAMIC_VERSION-x64.zip"
+        $env:WINDOWS_ZIPFILE="Hercules-$env:DYNAMIC_VERSION-win64.zip"
         echo "WINDOWS_ZIPFILE=$env:WINDOWS_ZIPFILE" >>$env:GITHUB_ENV
         echo $env:WINDOWS_ZIPFILE
         dir
