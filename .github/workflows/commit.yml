@@ -1,6 +1,19 @@
 name: Commit Build
 run-name: ${{ github.actor }} is doing a develop build
 
+# Build Hercules from the latest commit
+# WRL 15 NOV 2023
+
+#        arch: [armv6l, armv7l, aarch64]
+#        - arch: armv6l
+#          cpu: arm1176
+#          base_image: raspios_lite:latest
+#          cpu_info: cpuinfo/raspberrypi_zero_w
+#        - arch: armv7l
+#          cpu: cortex-a7
+#          base_image: raspios_lite:latest
+#          cpu_info: cpuinfo/raspberrypi_3b
+
 on:
   push:
     branches:
@@ -12,6 +25,20 @@ jobs:
 
     runs-on: ubuntu-latest
     needs: [build-linux, build-macos, build-windows]
+
+    strategy:
+      matrix:
+        arch: [aarch64]
+        include:
+        - arch: aarch64
+          cpu: cortex-a53
+          base_image: raspios_lite_arm64:2022-04-04
+          cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
+
+    steps:
+    - name: Check PWD
+      run: |
+        echo "pwd = $(pwd)"
 
     steps:
     - uses: actions/checkout@v3.3.0
@@ -585,6 +612,489 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         path: "${{env.WINDOWS_ZIPFILE}}"
+        name: "release.zips"
+
+########
+  build-arm64:
+
+    - name: pguyot ARM Runner
+      uses: pguyot/arm-runner-action@v2
+      with:
+        image_additional_mb: 4096
+        base_image: ${{ matrix.base_image }}
+        cpu: ${{ matrix.cpu }}
+        cpu_info: ${{ matrix.cpu_info }}
+        copy_artifact_dest: /tmp
+        copy_artifact_path: uploads
+        commands: |
+            test `uname -m` = ${{ matrix.arch }}
+            grep Model /proc/cpuinfo
+            #
+            echo "uname -r: $(uname -r)"
+            echo "uname -a: $(uname -a)"
+            os_name=$(uname -s)
+            echo "OS Type          : $os_name"
+            machine=$(uname -m)
+            #echo "Machine Arch     : $machine"
+            os_version_memory_size="$(free -m | awk '/^Mem:/{print $2}')"
+            echo "Memory Total (MB): $os_version_memory_size"
+            echo "Memory Free  (MB): $(free -m | awk '/^Mem:/{print $4}')"
+            #
+            OS_BITFLAG="32"
+            #
+            case "${os_name}" in
+               *hp-hpux*)
+                  ;;
+               *ibm-aix*)
+                  rc=`lsconf -k | grep -c 64-bit`
+                  if test $rc -eq 1; then
+                     OS_BITFLAG="64"
+                  fi
+                  ;;
+               i*86*solaris*)
+                  ;;
+               *solaris*)
+                  rc=`isainfo -v | grep -c 64-bit`
+                  if test $rc -eq 1; then
+                     OS_BITFLAG="64"
+                  fi
+                  ;;
+               sparc*sunos*)
+                  ;;
+               Linux)
+                  mach="`uname -m`"
+                  if test "$mach" = "aarch64" -o "$mach" = "x86_64" -o "$mach" = "ia86" -o "$mach" = "alpha" -o "$mach" = "ppc64" -o "$mach" = "ppc64le" -o "$mach" = "s390x" -o "$mach" = "e2k" -o "$mach" = "riscv64" ; then
+                     OS_BITFLAG="64"
+                  fi
+                  ;;
+               FreeBSD|OpenBSD|NetBSD)
+                  mach="`uname -m`"
+                  if test "$mach" = "amd64" -o "$mach" = "sparc64" ; then
+                     OS_BITFLAG="64"
+                  fi
+                  ;;
+               Darwin)
+                  os_osx_64bit=`sysctl hw.cpu64bit_capable | cut -f2 -d' '`
+                  if test $os_osx_64bit -eq 1; then
+                     OS_BITFLAG="64"
+                  fi
+                  ;;
+            esac
+            #
+            echo "Platform Bitness : $OS_BITFLAG"
+            #
+            export OPT_BUILD_DIR=/sandbox/herctest
+            export OPT_INSTALL_DIR="/usr/local"
+            #
+            export SCRIPT_DIR=/sandbox/hercules-helper
+            export OPT_REGINA_DIR="Regina-REXX-3.6"
+            export OPT_REGINA_TARFILE="Regina-REXX-3.6.tar.gz"
+            export OPT_REGINA_URL="http://www.wrljet.com/ibm360/Regina-REXX-3.6.tar.gz"
+            export GIT_REPO_HERCULES="https://github.com/SDL-Hercules-390/hyperion.git"
+            export GIT_BRANCH_HERCULES="develop"
+            export GIT_COMMIT_HERCULES=""
+            export GIT_REPO_EXTPKGS="https://github.com/SDL-Hercules-390"
+            export GIT_BRANCH_EXTPKGS=""
+            #
+            # reports: /sandbox
+            echo "pwd = $(pwd)"
+            #
+            # Create output directory
+            mkdir -p uploads
+            #
+            sudo apt-get update
+            sudo apt-get install -y git wget time ncat
+            sudo apt-get install -y build-essential
+            sudo apt-get install -y cmake autoconf automake flex gawk m4
+            sudo apt-get install -y libltdl-dev libtool-bin libcap2-bin libbz2-dev zlib1g-dev
+            #
+            # Clone Hercules-Helper
+            git clone https://github.com/wrljet/hercules-helper.git
+            ls -l
+            #
+            cd hercules-helper
+            echo "Script version: $SCRIPT_DIR/$(basename $0): $(git describe --long --tags --dirty --always 2>/dev/null)"
+            # add hercules-helper version to the build description
+            HERCULES_HELPER_VERSION="$(git describe --long --tags --dirty --always 2>/dev/null)"
+            cd -
+            #
+            mkdir -p $OPT_INSTALL_DIR
+            mkdir -p $OPT_BUILD_DIR/hyperion
+            cd $OPT_BUILD_DIR
+            rm -rf hyperion || true
+            #
+            which rexx && true
+            #export OPT_REGINA_URL="http://www.wrljet.com/ibm360/Regina-REXX-3.6.tar.gz"
+            #export OPT_REGINA_TARFILE="Regina-REXX-3.6.tar.gz"
+            #export OPT_REGINA_DIR="Regina-REXX-3.6"
+            wget $OPT_REGINA_URL
+            tar xfz "$OPT_REGINA_TARFILE"
+            pwd
+            # pushd $OPT_REGINA_DIR
+            cd $OPT_REGINA_DIR
+            #
+            echo "Patching Regina 3.6 source for aarch64"
+            patch -u configure -i "$SCRIPT_DIR/patches/regina-rexx-3.6.patch"
+            echo "Replacing config.{guess,sub}"
+            cp "$SCRIPT_DIR/patches/config.guess" ./common/
+            cp "$SCRIPT_DIR/patches/config.sub" ./common/
+            #
+            ./configure --libdir=/usr/lib
+            ./config.status --config
+            make
+            sudo make install
+            #popd
+            cd -
+            #
+            ldconfig
+            echo "Files:"
+            which rexx
+            find /usr/local/include -name 'rexx*.h' 2>&1
+            #
+            # git clone required repos
+            cd $OPT_BUILD_DIR
+            rm -rf hyperion || true
+            git clone -b $GIT_BRANCH_HERCULES $GIT_REPO_HERCULES
+            #
+            cd $OPT_BUILD_DIR
+            rm -rf extpkgs
+            mkdir extpkgs
+            cd extpkgs/
+            rm -rf *
+            git clone $GIT_REPO_EXTPKGS/crypto
+            git clone $GIT_REPO_EXTPKGS/decNumber
+            git clone $GIT_REPO_EXTPKGS/SoftFloat
+            git clone $GIT_REPO_EXTPKGS/telnet
+            #
+            cd $OPT_BUILD_DIR/hyperion
+            #
+            # Check program versions
+            util/bldlvlck
+            #
+            # Prepare and build extpkgs
+            cd $OPT_BUILD_DIR/extpkgs
+            rm -rf lib/
+            #
+            # We do this to match the way it's done in Hercules configure
+            target_cpu=$(uname -m)
+            case "$target_cpu" in
+                i*86|x86*)
+                    hc_cv_cpu_arch=x86
+                    hc_cv_pkg_lib_subdir=""
+                    ;;
+                amd64*)
+                    hc_cv_cpu_arch=x86
+                    hc_cv_pkg_lib_subdir=""
+                    ;;
+                aarch64*)
+                    hc_cv_cpu_arch=aarch64
+                    hc_cv_pkg_lib_subdir="/aarch64"
+                    ;;
+                arm64*)
+                    hc_cv_cpu_arch=aarch64
+                    hc_cv_pkg_lib_subdir="/aarch64"
+                    ;;
+                arm*)
+                    hc_cv_cpu_arch=arm
+                    hc_cv_pkg_lib_subdir="/arm"
+                    ;;
+                e2k*)
+                    hc_cv_cpu_arch=e2k
+                    hc_cv_pkg_lib_subdir="/e2k"
+                    ;;
+                mips*)
+                    hc_cv_cpu_arch=mips
+                    hc_cv_pkg_lib_subdir="/mips"
+                    ;;
+                ppc*|powerpc*)
+                    hc_cv_cpu_arch=ppc
+                    hc_cv_pkg_lib_subdir="/ppc"
+                    ;;
+                sparc*)
+                    hc_cv_cpu_arch=sparc
+                    hc_cv_pkg_lib_subdir="/sparc"
+                    ;;
+                s390x*)
+                    hc_cv_cpu_arch=s390x
+                    hc_cv_pkg_lib_subdir="/s390x"
+                    ;;
+                xscale*)
+                    hc_cv_cpu_arch=xscale
+                    hc_cv_pkg_lib_subdir="/xscale"
+                    ;;
+                riscv64*)
+                    hc_cv_cpu_arch=riscv64
+                    hc_cv_pkg_lib_subdir="/riscv64"
+                    ;;
+                *)
+                    hc_cv_cpu_arch=unknown
+                    hc_cv_pkg_lib_subdir="/unknown"
+                    ;;
+            esac
+            #
+            for pkg in crypto decNumber SoftFloat telnet; do
+                echo "Building extpkg: $pkg"
+            #
+                mkdir -p build/${pkg}$OS_BITFLAG.Release
+                cd build/${pkg}$OS_BITFLAG.Release
+            #
+                    # Clear CMake cache in case we've changed the options
+                    rm -f CMakeCache.txt
+            #
+                    # e.g. OPT_CMAKE_DEFINES="-DCMAKE_C_FLAGS_RELWITHDEBINFO=\"-O3 -march=native -g\""
+                    if [ ! -z "$OPT_CMAKE_DEFINES" ] ; then
+                        verbose_msg "Adding CMake defines: $OPT_CMAKE_DEFINES"
+                    fi
+            #
+            #
+                    cmake_cmd= cmake $OPT_CMAKE_DEFINES -D INSTALL_PREFIX=$OPT_BUILD_DIR/extpkgs -DLIB_INSTALL_DIR=lib$hc_cv_pkg_lib_subdir $OPT_BUILD_DIR/extpkgs/$pkg
+            #
+                    echo $cmake_cmd
+                    eval "$cmake_cmd"
+            #
+                    rc=$?
+                    if (( $rc != 0 )); then
+                        echo "ERROR: Cmake has failed! rc=$rc";
+                        echo "ERROR: extpkgs not built";
+                        exit 3
+                    fi
+            #
+                    make clean
+                    make -j 2 all
+                    make install
+                 cd -
+                 pwd
+            done
+            #
+            pwd
+            #
+            mkdir -p $OPT_BUILD_DIR/hyperion/build
+            cd $OPT_BUILD_DIR/hyperion/build
+            #
+            # Configure and build Hercules
+            CFLAGS="-frecord-gcc-switches" ../configure --enable-optimization="-g -g3 -ggdb3 -O3 -march=native" --enable-extpkgs=$OPT_BUILD_DIR/extpkgs --prefix=$OPT_INSTALL_DIR --enable-custom="Built for you with Hercules-Helper (version: $HERCULES_HELPER_VERSION)" --enable-regina-rexx
+            #
+            ./config.status --config
+            #
+            make clean
+            time make -j 2 2>&1
+            #
+            # FIXME 'make check' fails
+            # time make check
+            #
+            sudo make install
+            #
+            sudo setcap 'cap_sys_nice=eip' $OPT_INSTALL_DIR/bin/hercules
+            sudo setcap 'cap_sys_nice=eip' $OPT_INSTALL_DIR/bin/herclin
+            sudo setcap 'cap_net_admin+ep' $OPT_INSTALL_DIR/bin/hercifc
+            #
+            readelf -p .GCC.command.line $OPT_INSTALL_DIR/bin/hercules > hercules-gcc-options.txt
+            #
+            # Prepare dpkg
+            #
+            cd $OPT_BUILD_DIR/hyperion
+            echo "pwd = $(pwd)"
+            #
+            # Create Fish style release name
+            VERSION=$(./_dynamic_version)
+            #
+            # Remove double quotes and spaces from Fish's version string
+            VERSION="${VERSION%\"}"
+            VERSION="${VERSION#\"}"
+            VERSION="$(echo "$VERSION" | tr -d ' ')"
+            echo "VERSION: $VERSION"
+            #
+            COMMIT_REF=$(git rev-parse --short $GITHUB_SHA)
+            echo "COMMIT_REF: $COMMIT_REF"
+            VERSION_NAME="4.7"
+            echo "VERSION_NAME: $VERSION_NAME"
+            PACKAGE_NAME="hyperion-$VERSION_NAME"
+            echo "PACKAGE_NAME: $PACKAGE_NAME"
+            #
+            HERCULES_VERS="$(./_dynamic_version . VERSION | awk '{sub("-modified","", $0); print}' | sed 's/"//g')"
+            echo "Hercules package version: $HERCULES_VERS"
+            #
+            dpkg_src="$SCRIPT_DIR/packagers/debian/$PACKAGE_NAME"   # hercules-helper/packagers/debian/hyperion-4.4
+            echo "dpkg_src=$dpkg_src"
+            #
+            sudo rm -rf ./$PACKAGE_NAME
+            cp -R $dpkg_src $PACKAGE_NAME/
+            sudo cp ./$PACKAGE_NAME/DEBIAN/control ./$PACKAGE_NAME/DEBIAN/control.orig
+            #
+            # Update the version info in the dpkg control file
+            # Must 'sudo sh -c' to get the redirection to run as root
+            sudo sh -c "sed 's/Version:.*$/Version: $HERCULES_VERS/' ./$PACKAGE_NAME/DEBIAN/control.orig > ./$PACKAGE_NAME/DEBIAN/control"
+            #
+            # Update the CPU architecture info in the dpkg control file
+            # Must 'sudo sh -c' to get the redirection to run as root
+            sudo sh -c "sed 's/Architecture:.*$/Architecture: arm64/' ./$PACKAGE_NAME/DEBIAN/control.orig > ./$PACKAGE_NAME/DEBIAN/control"
+            #
+            cat ./$PACKAGE_NAME/DEBIAN/control
+            #
+            echo "Copy everything locally; correct libs dir"
+            #
+            # Display what got built and installed
+            # FIXME this takes forever
+            #ls -R --format=horizontal /usr/local/bin
+            #
+            cd $PACKAGE_NAME
+            sudo rm -rf usr
+            sudo mkdir -p ./usr/local/bin
+            # sudo cp -R /usr/local/ ./usr/local/
+            sudo cp /usr/local/bin/cckd2ckd ./usr/local/bin
+            sudo cp /usr/local/bin/cckd642ckd ./usr/local/bin
+            sudo cp /usr/local/bin/cckdcdsk ./usr/local/bin
+            sudo cp /usr/local/bin/cckdcdsk64 ./usr/local/bin
+            sudo cp /usr/local/bin/cckdcomp ./usr/local/bin
+            sudo cp /usr/local/bin/cckdcomp64 ./usr/local/bin
+            sudo cp /usr/local/bin/cckddiag ./usr/local/bin
+            sudo cp /usr/local/bin/cckddiag64 ./usr/local/bin
+            sudo cp /usr/local/bin/cckdmap ./usr/local/bin
+            sudo cp /usr/local/bin/cckdswap ./usr/local/bin
+            sudo cp /usr/local/bin/cckdswap64 ./usr/local/bin
+            sudo cp /usr/local/bin/cfba2fba ./usr/local/bin
+            sudo cp /usr/local/bin/cfba642fba ./usr/local/bin
+            sudo cp /usr/local/bin/ckd2cckd ./usr/local/bin
+            sudo cp /usr/local/bin/ckd2cckd64 ./usr/local/bin
+            sudo cp /usr/local/bin/convto64 ./usr/local/bin
+            sudo cp /usr/local/bin/dasdcat ./usr/local/bin
+            sudo cp /usr/local/bin/dasdconv ./usr/local/bin
+            sudo cp /usr/local/bin/dasdconv64 ./usr/local/bin
+            sudo cp /usr/local/bin/dasdcopy ./usr/local/bin
+            sudo cp /usr/local/bin/dasdcopy64 ./usr/local/bin
+            sudo cp /usr/local/bin/dasdinit ./usr/local/bin
+            sudo cp /usr/local/bin/dasdinit64 ./usr/local/bin
+            sudo cp /usr/local/bin/dasdisup ./usr/local/bin
+            sudo cp /usr/local/bin/dasdlist ./usr/local/bin
+            sudo cp /usr/local/bin/dasdload ./usr/local/bin
+            sudo cp /usr/local/bin/dasdload64 ./usr/local/bin
+            sudo cp /usr/local/bin/dasdls ./usr/local/bin
+            sudo cp /usr/local/bin/dasdpdsu ./usr/local/bin
+            sudo cp /usr/local/bin/dasdseq ./usr/local/bin
+            sudo cp /usr/local/bin/dasdser ./usr/local/bin
+            sudo cp /usr/local/bin/dmap2hrc ./usr/local/bin
+            sudo cp /usr/local/bin/fba2cfba ./usr/local/bin
+            sudo cp /usr/local/bin/fba2cfba64 ./usr/local/bin
+            sudo cp /usr/local/bin/hercifc ./usr/local/bin
+            sudo cp /usr/local/bin/herclin ./usr/local/bin
+            sudo cp /usr/local/bin/hercules ./usr/local/bin
+            sudo cp /usr/local/bin/hetget ./usr/local/bin
+            sudo cp /usr/local/bin/hetinit ./usr/local/bin
+            sudo cp /usr/local/bin/hetmap ./usr/local/bin
+            sudo cp /usr/local/bin/hetupd ./usr/local/bin
+            sudo cp /usr/local/bin/maketape ./usr/local/bin
+            sudo cp /usr/local/bin/regina ./usr/local/bin
+            sudo cp /usr/local/bin/regina-config ./usr/local/bin
+            sudo cp /usr/local/bin/rexx ./usr/local/bin
+            sudo cp /usr/local/bin/rxqueue ./usr/local/bin
+            sudo cp /usr/local/bin/rxstack ./usr/local/bin
+            sudo cp /usr/local/bin/tapecopy ./usr/local/bin
+            sudo cp /usr/local/bin/tapemap ./usr/local/bin
+            sudo cp /usr/local/bin/tapesplt ./usr/local/bin
+            sudo cp /usr/local/bin/tfprint ./usr/local/bin
+            sudo cp /usr/local/bin/tfswap ./usr/local/bin
+            sudo cp /usr/local/bin/txt2card ./usr/local/bin
+            sudo cp /usr/local/bin/vmfplc2 ./usr/local/bin
+            #
+            sudo mkdir -p ./usr/local/lib/hercules
+            sudo cp -R /usr/local/lib/hercules/* ./usr/local/lib/hercules
+            sudo cp /usr/local/lib/libhdt3420_not_mod.la ./usr/local/lib/
+            sudo cp /usr/local/lib/libhdt3420_not_mod.so ./usr/local/lib/
+            sudo cp /usr/local/lib/libhercd.la ./usr/local/lib/
+            sudo cp /usr/local/lib/libhercd.so ./usr/local/lib/
+            sudo cp /usr/local/lib/libherc.la ./usr/local/lib/
+            sudo cp /usr/local/lib/libhercs.la ./usr/local/lib/
+            sudo cp /usr/local/lib/libherc.so ./usr/local/lib/
+            sudo cp /usr/local/lib/libhercs.so ./usr/local/lib/
+            sudo cp /usr/local/lib/libherct.la ./usr/local/lib/
+            sudo cp /usr/local/lib/libherct.so ./usr/local/lib/
+            sudo cp /usr/local/lib/libhercu.la ./usr/local/lib/
+            sudo cp /usr/local/lib/libhercu.so ./usr/local/lib/
+            #
+            sudo cp -R /usr/local/share/hercules/ ./usr/local/share/
+            #
+            echo
+            pwd
+            ls
+            ls -R --format=horizontal ./usr/local
+            echo
+            cd -
+            pwd
+            # /sandbox/herctest/hyperion/hyperion-4.7
+            #
+            sudo chown root:root -R ./$PACKAGE_NAME
+            #
+            echo "Delete the temporary 'make install' dir"
+            sudo rm -rf /usr/local/$PACKAGE_NAME
+            #
+            echo "Create the Debian package"
+            pwd
+            dpkg -b ./$PACKAGE_NAME
+            LINUX_DEBNAME="Hercules-$VERSION.deb"
+            echo "LINUX_DEBNAME=Hercules-$VERSION.deb"
+            mv "$PACKAGE_NAME.deb" $LINUX_DEBNAME
+            ls -lh $LINUX_DEBNAME
+            #
+            # Test install the new dpkg deb
+            # pwd = /sandbox/herctest/hyperion
+            echo "pwd = $(pwd)"
+            #
+            # sudo dpkg --install Hercules-4.7.0.11032-SDL-DEV-g4f007805.deb
+            echo "dpkg --install ..."
+            sudo dpkg --install $LINUX_DEBNAME
+            echo
+            # FIXME -dev is in 'control' file
+            echo "dpkg -L ..."
+            dpkg -L "$PACKAGE_NAME-dev"
+            echo
+            #
+            echo "hash -r and which"
+            hash -r
+            which hercules
+            hercules --version
+            #
+            echo "dpkg-deb -f ..."
+            dpkg-deb -f "$LINUX_DEBNAME"
+            #
+            echo "dpkg-deb -s ..."
+            # FIXME
+            dpkg -s "$PACKAGE_NAME-dev"
+            #
+            echo "dpkg-deb -l ..."
+            # FIXME
+            dpkg -l "$PACKAGE_NAME-dev"
+            #
+            # Create dpkg sha256
+            echo "Create dpkg sha256"
+            curl -sL "$LINUX_DEBNAME" | shasum -a 256 | cut -d " " -f 1
+            #
+            # Copy .deb to upload directory
+            mkdir -p /sandbox/uploads
+            cp $LINUX_DEBNAME /sandbox/uploads
+            cp $LINUX_DEBNAME uploads
+
+    - name: Inspect results
+      run: |
+        # reports: /home/runner/work/sandbox/sandbox
+        pwd
+        ls -lh /home/runner/work
+        #ls -lh /home/runner/work/sandbox
+        #ls -lh /home/runner/work/sandbox/sandbox
+        #ls -lh /tmp
+        ls -lh /tmp/uploads
+        #
+        TITLE="Hercules Development Snapshot"
+        echo "Title: $TITLE"
+        echo "TITLE=$TITLE" >>$GITHUB_ENV
+        #
+        VERSION="123"
+        echo "Version: $VERSION"
+        echo "VERSION=$VERSION" >>$GITHUB_ENV
+
+    - name: Upload dpkg
+      uses: actions/upload-artifact@v2
+      with:
+        path: "/tmp/uploads/Hercules*.deb"
         name: "release.zips"
 
 ### END ###
