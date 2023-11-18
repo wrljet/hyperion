@@ -249,14 +249,6 @@ jobs:
         hercules_vers="$(./_dynamic_version . VERSION | awk '{sub("-modified","", $0); print}' | sed 's/"//g')"
         echo "Hercules package version: $hercules_vers"
         #
-        hercules_vers=$(./_dynamic_version)
-        #
-        # Remove double quotes and spaces from Fish's version string
-        hercules_vers="${hercules_vers%\"}"
-        hercules_vers="${hercules_vers#\"}"
-        hercules_vers="$(echo "$hercules_vers" | tr -d ' ')"
-        echo "FIXME Hercules package version: $hercules_vers"
-        #
         SCRIPT_PATH=~/hercules-helper
         echo "SCRIPT_PATH=$SCRIPT_PATH"
         #SCRIPT_DIR="$(dirname $SCRIPT_PATH)"
