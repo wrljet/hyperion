@@ -40,6 +40,10 @@ jobs:
         echo "pwd = $(pwd)"
 
     - uses: actions/checkout@v3.3.0
+      with:
+        # Number of commits to fetch. 0 indicates all history for all branches and tags.
+        # Default: 1
+        fetch-depth: 0
 
     - name: Download artifacts
       uses: actions/download-artifact@v2
@@ -661,9 +665,25 @@ jobs:
             VNUM3=$((VNUM3+1))
         fi
         #
+        #echo "*************************************"
+        #echo "pwd: $(pwd)"
+        #
         # Create new tag
         NEW_TAG="v$VNUM1.$VNUM2.$VNUM3"
         echo "NEW_TAG=$NEW_TAG"
+        #
+        # Make up the binaries tarball
+        PWD=$(pwd)
+        pushd ~
+        # Dir name inside binaries tarball
+        # e.g. sdl-hercules-binaries-macOS-0.9.26/
+        rm -rf ~/sdl-hercules-binaries-macOS-$NEW_TAG/
+        cp -R ~/sdl-hercules-binaries-macOS/ sdl-hercules-binaries-macOS-$NEW_TAG/
+        #
+        rm -rf sdl-hercules-binaries-macOS-$NEW_TAG/.git
+        tar cfz $PWD/sdl-hercules-binaries-macOS-$SDL_VERSION-$NEW_TAG.tar.gz sdl-hercules-binaries-macOS-$NEW_TAG
+        #
+        popd
 
 ########
   build-windows:
