@@ -428,6 +428,7 @@ jobs:
 
     - name: Get Commit Ref
       run: |
+        echo "pwd: $(pwd)"
         COMMIT_REF=$(git rev-parse --short $GITHUB_SHA)
         echo "COMMIT_REF: $COMMIT_REF"
         echo "COMMIT_REF=$COMMIT_REF" >>$GITHUB_ENV
@@ -565,6 +566,7 @@ jobs:
         #
         echo "*************************************"
         echo "pwd: $(pwd)"
+        ls -a
         echo "Update \$VERSION to \$NEW_TAG and create GitHub release"
         #
         # Get highest current tag number
