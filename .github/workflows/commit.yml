@@ -457,7 +457,7 @@ jobs:
         git clone $GIT_REPO_EXTPKGS/SoftFloat SoftFloat
         git clone $GIT_REPO_EXTPKGS/telnet telnet
         #
-        popd
+        popd # extpkgs
         echo "pwd: $(pwd)"
         #
         # ./hercules-helper/hercules-buildall.sh --help
@@ -483,6 +483,128 @@ jobs:
         #
         find /usr/local -name hercules 2>&1 | grep hercules
         #
+        echo "ls -ld ~: $(ls -ld ~)"
+        #
+        # /usr/local/bin/
+        mkdir -p ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/cckd2ckd   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/cckd642ckd ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/cckdcdsk   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/cckdcdsk64 ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/cckdcomp   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/cckdcomp64 ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/cckddiag   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/cckddiag64 ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/cckdmap    ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/cckdswap   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/cckdswap64 ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/cfba2fba   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/cfba642fba ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/ckd2cckd   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/ckd2cckd64 ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/convto64   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdcat    ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdconv   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdconv64 ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdcopy   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdcopy64 ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdinit   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdinit64 ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdisup   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdlist   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdload   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdload64 ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdls     ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdpdsu   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdseq    ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdser    ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dmap2hrc   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/fba2cfba   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/fba2cfba64 ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/hercifc    ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/herclin    ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/hercules   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/hetget     ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/hetinit    ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/hetmap     ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/hetupd     ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/maketape   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/tapecopy   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/tapemap    ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/tapesplt   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/vmfplc2    ~/sdl-hercules-binaries-macos/bin
+        # cp /usr/local/bin/voldsext.cmd  ~/sdl-hercules-binaries-macos/bin
+        #
+        # /usr/local/lib/
+        mkdir -p ~/sdl-hercules-binaries-macos/lib
+        cp -r /usr/local/lib/hercules              ~/sdl-hercules-binaries-macos/lib
+        cp /usr/local/lib/libhdt3420_not_mod.dylib ~/sdl-hercules-binaries-macos/lib
+        cp /usr/local/lib/libhdt3420_not_mod.la    ~/sdl-hercules-binaries-macos/lib
+        cp /usr/local/lib/libherc.dylib            ~/sdl-hercules-binaries-macos/lib
+        cp /usr/local/lib/libherc.la               ~/sdl-hercules-binaries-macos/lib
+        cp /usr/local/lib/libhercd.dylib           ~/sdl-hercules-binaries-macos/lib
+        cp /usr/local/lib/libhercd.la              ~/sdl-hercules-binaries-macos/lib
+        cp /usr/local/lib/libhercs.dylib           ~/sdl-hercules-binaries-macos/lib
+        cp /usr/local/lib/libhercs.la              ~/sdl-hercules-binaries-macos/lib
+        cp /usr/local/lib/libherct.dylib           ~/sdl-hercules-binaries-macos/lib
+        cp /usr/local/lib/libherct.la              ~/sdl-hercules-binaries-macos/lib
+        cp /usr/local/lib/libhercu.dylib           ~/sdl-hercules-binaries-macos/lib
+        cp /usr/local/lib/libhercu.la              ~/sdl-hercules-binaries-macos/lib
+        #
+        # /usr/local/share
+        mkdir -p ~/sdl-hercules-binaries-macos/share
+        cp -r /usr/local/share/hercules ~/sdl-hercules-binaries-macos/share
+        #
+        mkdir -p ~/sdl-hercules-binaries-macos/share/man/man1
+        mkdir -p ~/sdl-hercules-binaries-macos/share/man/man4
+        cp /usr/local/share/man/man1/cckddiag.1  ~/sdl-hercules-binaries-macos/share/man/man1
+        cp /usr/local/share/man/man1/dasdseq.1   ~/sdl-hercules-binaries-macos/share/man/man1
+        cp /usr/local/share/man/man1/vmfplc2.1   ~/sdl-hercules-binaries-macos/share/man/man1
+        cp /usr/local/share/man/man4/cckd.4      ~/sdl-hercules-binaries-macos/share/man/man4
+        #
+        #
+        echo "*************************************"
+        echo "pwd: $(pwd)"
+        echo "Update \$VERSION to \$NEW_TAG and create GitHub release"
+        #
+        # Get highest current tag number
+        VERSION=$(git describe --abbrev=0 --tags)
+        echo "gti describe --abbrev=0 --tags = $VERSION"
+        #
+        echo "Old Version: $VERSION"
+        #
+        # Replace . with space so can split into an array
+        VERSION_BITS=(${VERSION//./ })
+        #
+        #get number parts and increase last one by 1
+        VNUM1=${VERSION_BITS[0]}
+        VNUM2=${VERSION_BITS[1]}
+        VNUM3=${VERSION_BITS[2]}
+        VNUM1=$(echo $VNUM1 | sed 's/v//')
+        #
+        # Check for #major or #minor in commit message and increment the relevant version number
+        MAJOR=$(git log --format=%B ${VERSION}..HEAD --oneline | grep '#major' || true)
+        MINOR=$(git log --format=%B ${VERSION}..HEAD --oneline | grep '#minor' || true)
+        echo "MAJOR=$MAJOR"
+        echo "MINOR=$MINOR"
+        #
+        if [ "$MAJOR" ]; then
+            echo "Update major version"
+            VNUM1=$((VNUM1+1))
+            VNUM2=0
+            VNUM3=0
+        elif [ "$MINOR" ]; then
+            echo "Update minor version"
+            VNUM2=$((VNUM2+1))
+            VNUM3=0
+        else
+            echo "Update patch version"
+            VNUM3=$((VNUM3+1))
+        fi
+        #
+        # Create new tag
+        NEW_TAG="v$VNUM1.$VNUM2.$VNUM3"
+        echo "NEW_TAG=$NEW_TAG"
 
 ########
   build-windows:
