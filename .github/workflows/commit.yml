@@ -567,7 +567,11 @@ jobs:
         echo "*************************************"
         echo "pwd: $(pwd)"
         ls -a
+        echo "*************************************"
+        echo "pwd: $(pwd)"
         echo "Update \$VERSION to \$NEW_TAG and create GitHub release"
+        #
+        git status
         #
         # Get highest current tag number
         VERSION=$(git describe --abbrev=0 --tags)
