@@ -470,6 +470,9 @@ jobs:
         popd
         echo "pwd: $(pwd)"
         #
+        # Release names are of the form:
+        # SDL-Hercules-390 build 4.7.0.11032-SDL-DEV-g4f007805
+        #
         # Figure out the Hercules version string
         #
         SDL_VERSION=$(./_dynamic_version)
@@ -490,11 +493,11 @@ jobs:
         VERS_BLD=$(./_dynamic_version . VERS_BLD)
         DYNAMIC_VERSION=$(./_dynamic_version . VERSION)
         #
-        echo "VERS_MAJ=$VERS_MAJ)
-        echo "VERS_INT=$(VERS_INT)
-        echo "VERS_MIN=$(VERS_MIN)
-        echo "VERS_BLD=$(VERS_BLD)
-        echo "DYNAMIC_VERSION=$(DYNAMIC_VERSION)
+        echo "VERS_MAJ=$VERS_MAJ"
+        echo "VERS_INT=$VERS_INT"
+        echo "VERS_MIN=$VERS_MIN"
+        echo "VERS_BLD=$VERS_BLD"
+        echo "DYNAMIC_VERSION=$DYNAMIC_VERSION"
         #
         echo "pwd: $(pwd)"
         #
