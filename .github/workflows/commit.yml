@@ -75,6 +75,37 @@ jobs:
         echo "LINUX_TARBALL=$LINUX_TARBALL" >>$GITHUB_ENV
         LINUX_DEBNAME="Hercules-$VERSION.deb"
         echo "LINUX_DEBNAME=$LINUX_DEBNAME" >>$GITHUB_ENV
+        #
+        # Release names are of the form:
+        # SDL-Hercules-390 build 4.7.0.11032-SDL-DEV-g4f007805
+        #
+        # Figure out the Hercules version string
+        #
+        SDL_VERSION=$(./_dynamic_version)
+        #
+        # Remove double quotes and spaces from Fish's version string
+        #
+        SDL_VERSION="${SDL_VERSION%\"}"
+        SDL_VERSION="${SDL_VERSION#\"}"
+        SDL_VERSION="${SDL_VERSION//[[:space:]]/}"
+        echo "SDL_VERSION: $SDL_VERSION"
+        echo "SDL_VERSION=$SDL_VERSION" >>$GITHUB_ENV
+        #
+        #------------------------------------------------------------------------------
+        # Invoke shell script to dynamically define version variables
+        #------------------------------------------------------------------------------
+        VERS_MAJ=$(./_dynamic_version . VERS_MAJ)
+        VERS_INT=$(./_dynamic_version . VERS_INT)
+        VERS_MIN=$(./_dynamic_version . VERS_MIN)
+        VERS_BLD=$(./_dynamic_version . VERS_BLD)
+        DYNAMIC_VERSION=$(./_dynamic_version . VERSION)
+        #
+        echo "VERS_MAJ=$VERS_MAJ"
+        echo "VERS_INT=$VERS_INT"
+        echo "VERS_MIN=$VERS_MIN"
+        echo "VERS_BLD=$VERS_BLD"
+        echo "DYNAMIC_VERSION=$DYNAMIC_VERSION"
+        #
 
     - name: Review binaries
       run: |
@@ -94,7 +125,7 @@ jobs:
       uses: wrljet/actions/packages/automatic-releases@built-packages
       with:
         repo_token: "${{secrets.GITHUB_TOKEN}}"
-        automatic_release_tag: "latest-${{github.ref_name}}"
+        automatic_release_tag: "${{github.SDL_VERSION}}"
         prerelease: true
         title: "${{env.TITLE}} ${{env.VERSION}}"
         files: |
