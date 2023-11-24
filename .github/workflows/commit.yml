@@ -21,6 +21,8 @@ run-name: ${{ github.actor }} is doing a develop build
 # Hercules-4.7.0.1-SDL-DEV-g042bc23-amd64.deb
 # Debian ARM64
 # Hercules-4.7.0.11032-SDL-DEV-g4f007805-aarch64.deb
+#
+#   needs: [build-linux, build-macos, build-windows, build-arm64]
 
 on:
   push:
@@ -32,7 +34,7 @@ jobs:
   build-release:
 
     runs-on: ubuntu-latest
-    needs: [build-linux, build-macos, build-windows, build-arm64]
+    needs: [build-linux, build-macos, build-windows]
 
     steps:
     - name: Check PWD
@@ -677,11 +679,13 @@ jobs:
         pushd ~
         # Dir name inside binaries tarball
         # e.g. sdl-hercules-binaries-macOS-0.9.26/
+        ls -lh ~
         rm -rf ~/sdl-hercules-binaries-macOS-$NEW_TAG/
         cp -R ~/sdl-hercules-binaries-macOS/ sdl-hercules-binaries-macOS-$NEW_TAG/
         #
         rm -rf sdl-hercules-binaries-macOS-$NEW_TAG/.git
         tar cfz $PWD/sdl-hercules-binaries-macOS-$SDL_VERSION-$NEW_TAG.tar.gz sdl-hercules-binaries-macOS-$NEW_TAG
+        ls -lh $PWD 
         #
         popd
 
