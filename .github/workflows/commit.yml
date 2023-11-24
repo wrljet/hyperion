@@ -466,11 +466,11 @@ jobs:
         echo "pwd: $(pwd)"
         #
         # Figure out the Hercules version string
-        pushd hyperion
         #
         SDL_VERSION=$(./_dynamic_version)
         #
         # Remove double quotes and spaces from Fish's version string
+        #
         SDL_VERSION="${SDL_VERSION%\"}"
         SDL_VERSION="${SDL_VERSION#\"}"
         SDL_VERSION="${SDL_VERSION//[[:space:]]/}"
