@@ -458,10 +458,29 @@ jobs:
         git clone $GIT_REPO_EXTPKGS/telnet telnet
         #
         popd
+        echo "pwd: $(pwd)"
         #
         # ./hercules-helper/hercules-buildall.sh --help
-        ./hercules-helper/hercules-buildall.sh --auto --homebrew --no-clone --flavor=sdl-hyperion
+        ./hercules-helper/hercules-buildall.sh --auto --homebrew --no-clone --flavor=sdl-hyperion --no-bashrc --prefix=/usr/local
         popd
+        echo "pwd: $(pwd)"
+        #
+        # Figure out the Hercules version string
+        pushd hyperion
+        #
+        SDL_VERSION=$(./_dynamic_version)
+        #
+        # Remove double quotes and spaces from Fish's version string
+        SDL_VERSION="${SDL_VERSION%\"}"
+        SDL_VERSION="${SDL_VERSION#\"}"
+        SDL_VERSION="${SDL_VERSION//[[:space:]]/}"
+        echo "SDL_VERSION: $SDL_VERSION"
+        #
+        popd
+        echo "pwd: $(pwd)"
+        #
+        # Build artifacts are now in /usr/local{bin,lib,share}
+        # Copy them to ~/sdl-hercules-binaries-macos
 
 ########
   build-windows:
