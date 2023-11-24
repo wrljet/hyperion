@@ -667,25 +667,29 @@ jobs:
             VNUM3=$((VNUM3+1))
         fi
         #
-        #echo "*************************************"
-        #echo "pwd: $(pwd)"
+        echo "*************************************"
+        echo "pwd: $(pwd)"
         #
         # Create new tag
         NEW_TAG="v$VNUM1.$VNUM2.$VNUM3"
         echo "NEW_TAG=$NEW_TAG"
         #
         # Make up the binaries tarball
+        echo "pwd: $(pwd)"
         PWD=$(pwd)
         pushd ~
         # Dir name inside binaries tarball
         # e.g. sdl-hercules-binaries-macOS-0.9.26/
+        echo "pwd: $(pwd)"
         ls -lh ~
+        echo "*************************************"
         rm -rf ~/sdl-hercules-binaries-macOS-$NEW_TAG/
         cp -R ~/sdl-hercules-binaries-macOS/ sdl-hercules-binaries-macOS-$NEW_TAG/
         #
         rm -rf sdl-hercules-binaries-macOS-$NEW_TAG/.git
         tar cfz $PWD/sdl-hercules-binaries-macOS-$SDL_VERSION-$NEW_TAG.tar.gz sdl-hercules-binaries-macOS-$NEW_TAG
         ls -lh $PWD 
+        echo "*************************************"
         #
         popd
 
