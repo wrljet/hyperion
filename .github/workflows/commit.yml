@@ -125,7 +125,7 @@ jobs:
       uses: wrljet/actions/packages/automatic-releases@built-packages
       with:
         repo_token: "${{secrets.GITHUB_TOKEN}}"
-        automatic_release_tag: "${{github.SDL_VERSION}}"
+        automatic_release_tag: "${{env.SDL_VERSION}}"
         prerelease: true
         title: "${{env.TITLE}} ${{env.VERSION}}"
         files: |
