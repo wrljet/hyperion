@@ -481,6 +481,21 @@ jobs:
         SDL_VERSION="${SDL_VERSION//[[:space:]]/}"
         echo "SDL_VERSION: $SDL_VERSION"
         #
+        #------------------------------------------------------------------------------
+        # Invoke shell script to dynamically define version variables
+        #------------------------------------------------------------------------------
+        VERS_MAJ=$(./_dynamic_version . VERS_MAJ)
+        VERS_INT=$(./_dynamic_version . VERS_INT)
+        VERS_MIN=$(./_dynamic_version . VERS_MIN)
+        VERS_BLD=$(./_dynamic_version . VERS_BLD)
+        DYNAMIC_VERSION=$(./_dynamic_version . VERSION)
+        #
+        echo "VERS_MAJ=$VERS_MAJ)
+        echo "VERS_INT=$(VERS_INT)
+        echo "VERS_MIN=$(VERS_MIN)
+        echo "VERS_BLD=$(VERS_BLD)
+        echo "DYNAMIC_VERSION=$(DYNAMIC_VERSION)
+        #
         echo "pwd: $(pwd)"
         #
         # Build artifacts are now in /usr/local{bin,lib,share}
@@ -568,9 +583,9 @@ jobs:
         cp /usr/local/share/man/man4/cckd.4      ~/sdl-hercules-binaries-macos/share/man/man4
         #
         #
-        echo "*************************************"
-        echo "pwd: $(pwd)"
-        ls -a
+        #echo "*************************************"
+        #echo "pwd: $(pwd)"
+        #ls -a
         echo "*************************************"
         echo "pwd: $(pwd)"
         echo "Update \$VERSION to \$NEW_TAG and create GitHub release"
@@ -579,7 +594,7 @@ jobs:
         #
         # Get highest current tag number
         VERSION=$(git describe --abbrev=0 --tags)
-        echo "gti describe --abbrev=0 --tags = $VERSION"
+        echo "git describe --abbrev=0 --tags = $VERSION"
         #
         echo "Old Version: $VERSION"
         #
