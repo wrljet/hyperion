@@ -520,6 +520,7 @@ jobs:
         SDL_VERSION="${SDL_VERSION#\"}"
         SDL_VERSION="${SDL_VERSION//[[:space:]]/}"
         echo "SDL_VERSION: $SDL_VERSION"
+        echo "SDL_VERSION=$SDL_VERSION" >>$GITHUB_ENV
         #
         #------------------------------------------------------------------------------
         # Invoke shell script to dynamically define version variables
@@ -672,7 +673,8 @@ jobs:
         #
         # Make up the binaries tarball
         echo "pwd: $(pwd)"
-        PWD=$(pwd)
+        ARTIFACT_DIR=$(pwd)
+        echo "ARTIFACT_DIR=$ARTIFACT_DIR" >>$GITHUB_ENV
         pushd ~
         # Dir name inside binaries tarball
         # e.g. sdl-hercules-binaries-macOS-0.9.26/
@@ -683,16 +685,20 @@ jobs:
         # cp -R ~/sdl-hercules-binaries-macOS/ sdl-hercules-binaries-macOS/
         #
         rm -rf sdl-hercules-binaries-macOS/.git
-        tar cfz $PWD/sdl-hercules-binaries-macOS-$SDL_VERSION.tar.gz sdl-hercules-binaries-macOS
-        ls -lh $PWD 
+        tar cfz $ARTIFACT_DIR/sdl-hercules-binaries-macOS-$SDL_VERSION.tar.gz sdl-hercules-binaries-macOS
+        ls -lh $ARTIFACT_DIR 
         echo "*************************************"
+        #
+        # Examine the tarball
+        #
+        tar tvfz $ARTIFACT_DIR/sdl-hercules-binaries-macOS-$SDL_VERSION.tar.gz | (head && tail)
         #
         popd
 
     - name: Upload Homebrew formula
       uses: actions/upload-artifact@v2
       with:
-        path: "$PWD/sdl-hercules-binaries-macOS-$SDL_VERSION.tar.gz"
+        path: "${{env.ARTIFACT_DIR}}/sdl-hercules-binaries-macOS-${{env.SDL_VERSION}}.tar.gz"
         name: "release.zips"
 
 ########
