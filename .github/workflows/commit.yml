@@ -683,11 +683,11 @@ jobs:
         echo "pwd: $(pwd)"
         ls -lh ~
         echo "*************************************"
-        rm -rf ~/sdl-hercules-binaries-macOS-$NEW_TAG/
-        cp -R ~/sdl-hercules-binaries-macOS/ sdl-hercules-binaries-macOS-$NEW_TAG/
+        rm -rf ~/sdl-hercules-binaries-macOS/
+        cp -R ~/sdl-hercules-binaries-macOS/ sdl-hercules-binaries-macOS/
         #
-        rm -rf sdl-hercules-binaries-macOS-$NEW_TAG/.git
-        tar cfz $PWD/sdl-hercules-binaries-macOS-$SDL_VERSION-$NEW_TAG.tar.gz sdl-hercules-binaries-macOS-$NEW_TAG
+        rm -rf sdl-hercules-binaries-macOS/.git
+        tar cfz $PWD/sdl-hercules-binaries-macOS-$SDL_VERSION-$NEW_TAG.tar.gz sdl-hercules-binaries-macOS
         ls -lh $PWD 
         echo "*************************************"
         #
