@@ -670,10 +670,6 @@ jobs:
         echo "*************************************"
         echo "pwd: $(pwd)"
         #
-        # Create new tag
-        NEW_TAG="v$VNUM1.$VNUM2.$VNUM3"
-        echo "NEW_TAG=$NEW_TAG"
-        #
         # Make up the binaries tarball
         echo "pwd: $(pwd)"
         PWD=$(pwd)
@@ -687,11 +683,17 @@ jobs:
         # cp -R ~/sdl-hercules-binaries-macOS/ sdl-hercules-binaries-macOS/
         #
         rm -rf sdl-hercules-binaries-macOS/.git
-        tar cfz $PWD/sdl-hercules-binaries-macOS-$SDL_VERSION-$NEW_TAG.tar.gz sdl-hercules-binaries-macOS
+        tar cfz $PWD/sdl-hercules-binaries-macOS-$SDL_VERSION.tar.gz sdl-hercules-binaries-macOS
         ls -lh $PWD 
         echo "*************************************"
         #
         popd
+
+    - name: Upload Homebrew formula
+      uses: actions/upload-artifact@v2
+      with:
+        path: "$PWD/sdl-hercules-binaries-macOS-$SDL_VERSION.tar.gz"
+        name: "release.zips"
 
 ########
   build-windows:
