@@ -149,6 +149,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3.3.0
+      with:
+        # Number of commits to fetch. 0 indicates all history for all branches and tags.
+        # Default: 1
+        fetch-depth: 0
 
     - name: System Information
       run: |
@@ -691,6 +695,7 @@ jobs:
         #
         # Examine the tarball
         #
+        echo "tar tvfz | (head && tail)"
         tar tvfz $ARTIFACT_DIR/sdl-hercules-binaries-macOS-$SDL_VERSION.tar.gz | (head && tail)
         #
         popd
@@ -712,6 +717,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3.3.0
+      with:
+        # Number of commits to fetch. 0 indicates all history for all branches and tags.
+        # Default: 1
+        fetch-depth: 0
 
     - name: Build System Info
       run: |
