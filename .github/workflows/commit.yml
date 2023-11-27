@@ -482,6 +482,7 @@ jobs:
     - name: Install Packages
       run: |
         brew install cmake
+        brew search sha256sum
         brew install sha3sum
         which sha256sum
 
