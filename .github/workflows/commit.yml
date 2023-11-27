@@ -483,6 +483,7 @@ jobs:
       run: |
         brew install cmake
         brew install sha3sum
+        which sha256sum
 
     - name: Build
       run: |
