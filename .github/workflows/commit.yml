@@ -717,7 +717,7 @@ jobs:
         # https://github.com/wrljet/hyperion/releases/download/4.7.0.11167-SDL-DEV-g6aec5b66/sdl-hercules-binaries-macOS-4.7.0.11167-SDL-DEV-g6aec5b66.tar.gz
         #
         grep url hyperion/packagers/macOS/Homebrew/sdl-hercules-develop.rb
-        gsed -i -e "s#releases/download/.*$#releases/download/$SDL_VERSION/$SDL_VERSION.tar.gz#g" hyperion/packagers/macOS/Homebrew/sdl-hercules-develop.rb
+        gsed -i -e "s/releases\/download\/.*$/releases\/download\/$SDL_VERSION\/$SDL_VERSION.tar.gz/g" hyperion/packagers/macOS/Homebrew/sdl-hercules-develop.rb
         #
         cat hyperion/packagers/macOS/Homebrew/sdl-hercules-develop.rb
         #
