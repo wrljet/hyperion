@@ -126,6 +126,7 @@ jobs:
           release.zips/*.deb
           release.zips/*.zip
           release.zips/*.tar.gz
+          release.zips/*.rb
 
     - name: Attach Release Archive
       uses: wrljet/actions/packages/automatic-releases@built-packages
@@ -744,7 +745,9 @@ jobs:
     - name: Upload Homebrew formula
       uses: actions/upload-artifact@v2
       with:
-        path: "${{env.ARTIFACT_DIR}}/sdl-hercules-binaries-macOS-${{env.SDL_VERSION}}.tar.gz"
+        path: |
+          "${{env.ARTIFACT_DIR}}/sdl-hercules-binaries-macOS-${{env.SDL_VERSION}}.tar.gz"
+          hyperion/packagers/macOS/Homebrew/sdl-hercules-develop.rb
         name: "release.zips"
 
 ########
