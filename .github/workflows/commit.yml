@@ -705,9 +705,10 @@ jobs:
         #
         echo "Step: Create new formula (with new tag \$NEW_TAG):"
         #
-        pushd ~
+        # ~/work/hyperion/hyperion to ~/work/hyperion
+        pushd .. 
         echo "pwd: $(pwd)"
-        ls -lh ~
+        ls -lh .
         #
         # Update release tag in URL
         cp hyperion/packagers/macOS/Homebrew/sdl-hercules-develop.rb sdl-hercules-develop.rb.old
@@ -721,6 +722,8 @@ jobs:
         #
         # Update formula (download release and get sha256)
         rm -f /usr/local/Homebrew/Library/Taps/homebrew/homebrew-core/Formula/sdl-hercules-binaries-macOS.rb
+        #
+        popd
 
     - name: Upload Homebrew formula
       uses: actions/upload-artifact@v2
