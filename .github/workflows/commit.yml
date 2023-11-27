@@ -705,13 +705,19 @@ jobs:
         #
         echo "Step: Create new formula (with new tag \$NEW_TAG):"
         #
+        pushd ~
+        echo "pwd: $(pwd)"
+        ls -lh ~
+        #
         # Update release tag in URL
-        cp sdl-hercules-develop.rb sdl-hercules-develop.rb.old
+        cp hyperion/packagers/macOS/Homebrew/sdl-hercules-develop.rb sdl-hercules-develop.rb.old
         #
         # URL to binaries tarball is of this form:
         # https://github.com/wrljet/hyperion/releases/download/v0.9.43/sdl-hercules-binaries-macos-4.6.0.10941-SDL-g65c97fd6-v0.9.43.tar.gz
         #
-        gsed -i -e "s/v0\.9\.[0-9]\+/$NEW_TAG/g" sdl-hercules-develop.rb
+        gsed -i -e "s/v0\.9\.[0-9]\+/$NEW_TAG/g" hyperion/packagers/macOS/Homebrew/sdl-hercules-develop.rb
+        #
+        cat hyperion/packagers/macOS/Homebrew/sdl-hercules-develop.rb
         #
         # Update formula (download release and get sha256)
         rm -f /usr/local/Homebrew/Library/Taps/homebrew/homebrew-core/Formula/sdl-hercules-binaries-macOS.rb
