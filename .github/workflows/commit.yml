@@ -482,6 +482,7 @@ jobs:
     - name: Install Packages
       run: |
         brew install cmake
+        brew install sha3sum
 
     - name: Build
       run: |
