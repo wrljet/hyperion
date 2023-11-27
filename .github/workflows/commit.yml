@@ -482,9 +482,9 @@ jobs:
     - name: Install Packages
       run: |
         brew install cmake
-        brew search sha256sum
+        brew search shasum
         brew install sha3sum
-        which sha256sum
+        which shasum
 
     - name: Build
       run: |
@@ -729,7 +729,7 @@ jobs:
         #
         # Get new checksum into the formula
         #
-        SHA256=$(sha256sum $ARTIFACT_DIR/sdl-hercules-binaries-macOS-$SDL_VERSION.tar.gz)
+        SHA256=$(shasum -a 256 $ARTIFACT_DIR/sdl-hercules-binaries-macOS-$SDL_VERSION.tar.gz)
         echo "New sha256: $SHA256"
         SHA256=${SHA256%% *}
         echo "First word of sha256sum: ${SHA256%% *}"
