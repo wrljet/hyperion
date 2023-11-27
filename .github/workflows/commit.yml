@@ -724,6 +724,18 @@ jobs:
         # Update formula (download release and get sha256)
         rm -f /usr/local/Homebrew/Library/Taps/homebrew/homebrew-core/Formula/sdl-hercules-binaries-macOS.rb
         #
+        # Get new checksum into the formula
+        #
+        SHA256=$(sha256sum $ARTIFACT_DIR/sdl-hercules-binaries-macOS-$SDL_VERSION.tar.gz)
+        echo "New sha256: $SHA256"
+        SHA256=${SHA256%% *}
+        echo "First word of sha256sum: ${SHA256%% *}"
+        #
+        # Edit the sha256 into the .rb
+        gsed -i -e "s/  sha256 \"[0-9a-f]\+\"/  sha256 \"$SHA256\"/" hyperion/packagers/macOS/Homebrew/sdl-hercules-develop.rb
+        #
+        head hyperion/packagers/macOS/Homebrew/sdl-hercules-develop.rb
+        #
         popd
 
     - name: Upload Homebrew formula
