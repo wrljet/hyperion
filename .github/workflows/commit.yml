@@ -737,6 +737,7 @@ jobs:
         gsed -i -e "s/  sha256 \"[0-9a-f]\+\"/  sha256 \"$SHA256\"/" hyperion/packagers/macOS/Homebrew/sdl-hercules-develop.rb
         #
         head hyperion/packagers/macOS/Homebrew/sdl-hercules-develop.rb
+        cp hyperion/packagers/macOS/Homebrew/sdl-hercules-develop.rb hyperion-packagers/macOS/Homebrew/Hercules-$SDL_VERSION.rb
         #
         popd
 
@@ -750,7 +751,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: "release.zips"
-        path: packagers/macOS/Homebrew/sdl-hercules-develop.rb
+        path: packagers/macOS/Homebrew/Hercules-$SDL_VERSION.rb
 
 ########
   build-windows:
