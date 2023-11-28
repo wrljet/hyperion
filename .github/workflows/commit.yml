@@ -751,7 +751,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: "release.zips"
-        path: packagers/macOS/Homebrew/Hercules-$SDL_VERSION.rb
+        path: "packagers/macOS/Homebrew/Hercules-*.rb"
 
 ########
   build-windows:
