@@ -741,7 +741,7 @@ jobs:
         #
         popd
 
-    - name: Upload Homebrew tarball
+    - name: Upload macOS tarball
       uses: actions/upload-artifact@v2
       with:
         name: "release.zips"
