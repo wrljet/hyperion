@@ -2,7 +2,7 @@ name: Commit Build
 run-name: ${{ github.actor }} is doing a develop build
 
 # Build Hercules from the latest commit
-# WRL 15 NOV 2023
+# WRL 28 NOV 2023
 
 #        arch: [armv6l, armv7l, aarch64]
 #        - arch: armv6l
