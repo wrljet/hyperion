@@ -740,13 +740,17 @@ jobs:
         #
         popd
 
+    - name: Upload Homebrew tarball
+      uses: actions/upload-artifact@v2
+      with:
+        name: "release.zips"
+        path: "${{env.ARTIFACT_DIR}}/sdl-hercules-binaries-macOS-${{env.SDL_VERSION}}.tar.gz"
+
     - name: Upload Homebrew formula
       uses: actions/upload-artifact@v2
       with:
         name: "release.zips"
-        path: |
-          "${{env.ARTIFACT_DIR}}/sdl-hercules-binaries-macOS-${{env.SDL_VERSION}}.tar.gz"
-          packagers/macOS/Homebrew/sdl-hercules-develop.rb
+        path: packagers/macOS/Homebrew/sdl-hercules-develop.rb
 
 ########
   build-windows:
