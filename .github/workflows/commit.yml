@@ -728,7 +728,7 @@ jobs:
         #
         # Get new checksum into the formula
         #
-        SHA256=$(shasum -a 256 $ARTIFACT_DIR/sdl-hercules-binaries-macOS-$SDL_VERSION.tar.gz)
+        SHA256=$(shasum -a 256 $ARTIFACT_DIR/Hercules-$SDL_VERSION-macOS.tar.gz)
         echo "New sha256: $SHA256"
         SHA256=${SHA256%% *}
         echo "First word of sha256sum: ${SHA256%% *}"
