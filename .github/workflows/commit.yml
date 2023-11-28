@@ -29,6 +29,10 @@ on:
     branches:
       - "develop"
       - "workflow"
+  workflow_dispatch:
+    branches:
+      - "develop"
+      - "workflow"
 
 jobs:
   build-release:
