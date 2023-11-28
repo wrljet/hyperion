@@ -683,7 +683,7 @@ jobs:
         echo "ARTIFACT_DIR=$ARTIFACT_DIR" >>$GITHUB_ENV
         pushd ~
         # Dir name inside binaries tarball
-        # e.g. sdl-hercules-binaries-macOS-0.9.26/
+        # e.g. sdl-hercules-binaries-macOS/
         echo "pwd: $(pwd)"
         ls -lh ~
         echo "*************************************"
@@ -691,14 +691,14 @@ jobs:
         # cp -R ~/sdl-hercules-binaries-macOS/ sdl-hercules-binaries-macOS/
         #
         rm -rf sdl-hercules-binaries-macOS/.git
-        tar cfz $ARTIFACT_DIR/sdl-hercules-binaries-macOS-$SDL_VERSION.tar.gz sdl-hercules-binaries-macOS
+        tar cfz $ARTIFACT_DIR/Hercules-$SDL_VERSION-macOS.tar.gz sdl-hercules-binaries-macOS
         ls -lh $ARTIFACT_DIR 
         echo "*************************************"
         #
         # Examine the tarball
         #
         echo "tar tvfz | (head && tail)"
-        tar tvfz $ARTIFACT_DIR/sdl-hercules-binaries-macOS-$SDL_VERSION.tar.gz | (head && tail)
+        tar tvfz $ARTIFACT_DIR/Hercules-$SDL_VERSION-macOS.tar.gz | (head && tail)
         #
         popd
         #------------------------------------------------------------------------------
