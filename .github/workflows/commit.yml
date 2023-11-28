@@ -745,7 +745,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: "release.zips"
-        path: "${{env.ARTIFACT_DIR}}/sdl-hercules-binaries-macOS-${{env.SDL_VERSION}}.tar.gz"
+        path: "${{env.ARTIFACT_DIR}}/Hercules-${{env.SDL_VERSION}}-macOS.tar.gz"
 
     - name: Upload Homebrew formula
       uses: actions/upload-artifact@v2
