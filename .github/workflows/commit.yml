@@ -139,6 +139,14 @@ jobs:
           checksum.txt
           release.zips
 
+    - name: Add Some Commentary
+      uses: irongut/EditRelease@v1.2.0
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        id: ${{ github.event.release.id }}
+        body: "FIXME added text FIXME"
+        files: "checksum.txt"
+
 ########
   build-linux:
 
