@@ -143,6 +143,7 @@ jobs:
       uses: joutvhu/create-release@v1
       with:
         tag_name: "${{env.SDL_VERSION}}"
+        name: "${{env.TITLE}} ${{env.VERSION}}"
         body: |
           Changes in this Release
           - First Change
