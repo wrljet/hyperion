@@ -146,7 +146,31 @@ jobs:
         ls -lh release.zips
         echo "========================"
         gh release view "${{env.SDL_VERSION}}"
+        #
+        # The output here will look like:
+        #
+        # title:	Hercules 4.7.0.11205-SDL-DEV-ga8d0680d
+        # tag:	4.7.0.11205-SDL-DEV-ga8d0680d
+        # draft:	false
+        # prerelease:	true
+        # author:	github-actions[bot]
+        # created:	2023-12-01T21:38:27Z
+        # published:	2023-12-01T21:46:19Z
+        # url:	https://github.com/wrljet/hyperion/releases/tag/4.7.0.11205-SDL-DEV-ga8d0680d
+        # asset:	checksum.txt
+        # asset:	Hercules-4.7.0.11205-SDL-DEV-ga8d0680d-amd64.deb
+        # asset:	Hercules-4.7.0.11205-SDL-DEV-ga8d0680d-macOS.rb
+        # asset:	Hercules-4.7.0.11205-SDL-DEV-ga8d0680d-macOS.tar.gz
+        # asset:	Hercules-4.7.0.11205-SDL-DEV-ga8d0680d-win64.zip
+        # --
+        # ## Commits
+        #
         echo "========================"
+        #
+        # Search for -- ## Commits and stick in our new readme info
+        VIEW=$(gh release view "${{env.SDL_VERSION}}")
+        echo $VIEW | sed -e 's/--\n##/FIXME FIXME\n\n--\n##/' 
+
 
 ########
   build-linux:
