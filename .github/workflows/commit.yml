@@ -144,7 +144,9 @@ jobs:
         GH_TOKEN: ${{ github.token }}
       run: |
         ls -lh release.zips
+        echo "========================"
         gh release view "${{env.SDL_VERSION}}"
+        echo "========================"
 
 ########
   build-linux:
