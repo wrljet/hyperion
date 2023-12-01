@@ -115,7 +115,7 @@ jobs:
 
     - name: Review binaries
       run: |
-        ls -l release.zips
+        ls -lh release.zips
         echo "LINUX_TARBALL: ${{env.LINUX_TARBALL}}"
         echo "LINUX_DEBNAME: ${{env.LINUX_DEBNAME}}"
 
@@ -139,13 +139,10 @@ jobs:
           checksum.txt
           release.zips
 
-    - name: Update Release
-      uses: irongut/EditRelease@v1.2.0
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        body: "Released to GitHub Packages."
-        # id: ${{ github.event.release.id }}
-        # files: "code-coverage-results.md"
+    - name: Update Release Notes
+      run: |
+        ls -lh release.zips
+        gh release view "${{env.SDL_VERSION}}"
 
 ########
   build-linux:
