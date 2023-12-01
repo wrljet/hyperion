@@ -140,6 +140,8 @@ jobs:
           release.zips
 
     - name: Update Release Notes
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
         ls -lh release.zips
         gh release view "${{env.SDL_VERSION}}"
