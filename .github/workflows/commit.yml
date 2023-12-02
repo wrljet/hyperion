@@ -1,0 +1,1436 @@
+name: Commit Build
+run-name: ${{ github.actor }} is doing a develop build
+
+# Build Hercules from the latest commit
+# WRL 28 NOV 2023
+
+#        arch: [armv6l, armv7l, aarch64]
+#        - arch: armv6l
+#          cpu: arm1176
+#          base_image: raspios_lite:latest
+#          cpu_info: cpuinfo/raspberrypi_zero_w
+#        - arch: armv7l
+#          cpu: cortex-a7
+#          base_image: raspios_lite:latest
+#          cpu_info: cpuinfo/raspberrypi_3b
+
+# Uploaded artifacts:
+# Windows
+# Hercules-4.7.0.1-SDL-DEV-g042bc23-win64.zip
+# Debian X86-64
+# Hercules-4.7.0.1-SDL-DEV-g042bc23-amd64.deb
+# Debian ARM64
+# Hercules-4.7.0.11032-SDL-DEV-g4f007805-aarch64.deb
+#
+#   needs: [build-linux, build-macos, build-windows, build-arm64]
+
+on:
+  push:
+    branches:
+      - "develop"
+      - "workflow"
+
+jobs:
+  build-release:
+
+    runs-on: ubuntu-latest
+    needs: [build-linux, build-macos, build-windows]
+
+    steps:
+    - name: Check PWD
+      run: |
+        echo "pwd = $(pwd)"
+
+    - uses: actions/checkout@v3.3.0
+      with:
+        # Number of commits to fetch. 0 indicates all history for all branches and tags.
+        # Default: 1
+        fetch-depth: 0
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v2
+#     with:
+#       name: "release.zips"
+
+    - name: Set Title
+      run: |
+        echo "Tag: latest-${{github.ref_name}}"
+        if grep -q "develop" <<< "${{github.ref_name}}"; then
+          TITLE="Hercules Development Snapshot"
+        elif grep -q "workflow" <<< "${{github.ref_name}}"; then
+          TITLE="Hercules Development Snapshot"
+          TITLE="Hercules"
+        fi
+        echo "Title: $TITLE"
+        echo "TITLE=$TITLE" >>$GITHUB_ENV
+        #
+        pwd
+        #
+        # Create Fish style release name
+        VERSION=$(./_dynamic_version)
+        #
+        # Remove double quotes and spaces from Fish's version string
+        VERSION="${VERSION%\"}"
+        VERSION="${VERSION#\"}"
+        VERSION="${VERSION//[[:space:]]/}"
+        echo "VERSION: $VERSION"
+        echo "VERSION=$VERSION" >>$GITHUB_ENV
+        #
+        # Artifact Names
+        LINUX_TARBALL="Hercules-$VERSION-Ubuntu-x64.tar.gz"
+        echo "LINUX_TARBALL=$LINUX_TARBALL" >>$GITHUB_ENV
+        LINUX_DEBNAME="Hercules-$VERSION.deb"
+        echo "LINUX_DEBNAME=$LINUX_DEBNAME" >>$GITHUB_ENV
+        #
+        # Release names are of the form:
+        # SDL-Hercules-390 build 4.7.0.11032-SDL-DEV-g4f007805
+        #
+        # Figure out the Hercules version string
+        #
+        SDL_VERSION=$(./_dynamic_version)
+        #
+        # Remove double quotes and spaces from Fish's version string
+        #
+        SDL_VERSION="${SDL_VERSION%\"}"
+        SDL_VERSION="${SDL_VERSION#\"}"
+        SDL_VERSION="${SDL_VERSION//[[:space:]]/}"
+        echo "SDL_VERSION: $SDL_VERSION"
+        echo "SDL_VERSION=$SDL_VERSION" >>$GITHUB_ENV
+        #
+        #------------------------------------------------------------------------------
+        # Invoke shell script to dynamically define version variables
+        #------------------------------------------------------------------------------
+        VERS_MAJ=$(./_dynamic_version . VERS_MAJ)
+        VERS_INT=$(./_dynamic_version . VERS_INT)
+        VERS_MIN=$(./_dynamic_version . VERS_MIN)
+        VERS_BLD=$(./_dynamic_version . VERS_BLD)
+        DYNAMIC_VERSION=$(./_dynamic_version . VERSION)
+        #
+        echo "VERS_MAJ=$VERS_MAJ"
+        echo "VERS_INT=$VERS_INT"
+        echo "VERS_MIN=$VERS_MIN"
+        echo "VERS_BLD=$VERS_BLD"
+        echo "DYNAMIC_VERSION=$DYNAMIC_VERSION"
+        #
+
+    - name: Review binaries
+      run: |
+        ls -lh release.zips
+        echo "LINUX_TARBALL: ${{env.LINUX_TARBALL}}"
+        echo "LINUX_DEBNAME: ${{env.LINUX_DEBNAME}}"
+
+    - name: Generate checksums
+      uses: jmgilman/actions-generate-checksum@v1
+      with:
+        patterns: |
+          release.zips/*.deb
+          release.zips/*.zip
+          release.zips/*.tar.gz
+          release.zips/*.rb
+
+    - name: Attach Release Archive
+      uses: wrljet/actions/packages/automatic-releases@built-packages
+      with:
+        repo_token: "${{secrets.GITHUB_TOKEN}}"
+        automatic_release_tag: "${{env.SDL_VERSION}}"
+        prerelease: true
+        title: "${{env.TITLE}} ${{env.VERSION}}"
+        files: |
+          checksum.txt
+          release.zips
+
+    - name: Update Release Notes
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        ls -lh release.zips
+        echo "========================"
+        gh release view "${{env.SDL_VERSION}}"
+        #
+        # The output here will look like:
+        #
+        # title:	Hercules 4.7.0.11205-SDL-DEV-ga8d0680d
+        # tag:	4.7.0.11205-SDL-DEV-ga8d0680d
+        # draft:	false
+        # prerelease:	true
+        # author:	github-actions[bot]
+        # created:	2023-12-01T21:38:27Z
+        # published:	2023-12-01T21:46:19Z
+        # url:	https://github.com/wrljet/hyperion/releases/tag/4.7.0.11205-SDL-DEV-ga8d0680d
+        # asset:	checksum.txt
+        # asset:	Hercules-4.7.0.11205-SDL-DEV-ga8d0680d-amd64.deb
+        # asset:	Hercules-4.7.0.11205-SDL-DEV-ga8d0680d-macOS.rb
+        # asset:	Hercules-4.7.0.11205-SDL-DEV-ga8d0680d-macOS.tar.gz
+        # asset:	Hercules-4.7.0.11205-SDL-DEV-ga8d0680d-win64.zip
+        # --
+        # ## Commits
+        #
+        echo "========================"
+        #
+        # Search for -- ## Commits and stick in our new readme info
+        gh release view "${{env.SDL_VERSION}}" > foo
+        #
+        cat foo | tr '\n' '\r' | sed -e 's/--\r##/Note: macOS Homebrew formula must be renamed to sdl-hercules-develop.rb\r\r--\r##/' | tr '\r' '\n' > goo
+        #
+        gh release edit "${{env.SDL_VERSION}}" --notes-file goo
+
+########
+  build-linux:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+
+    steps:
+    - uses: actions/checkout@v3.3.0
+      with:
+        # Number of commits to fetch. 0 indicates all history for all branches and tags.
+        # Default: 1
+        fetch-depth: 0
+
+    - name: System Information
+      run: |
+        uname -a
+        cat /etc/os-release
+        echo "pwd = $(pwd)"
+        SCRIPT_PATH=~/hercules-helper
+        echo "SCRIPT_PATH=$SCRIPT_PATH"
+        SCRIPT_DIR="$(dirname $SCRIPT_PATH)"
+        echo "SCRIPT_DIR=$SCRIPT_DIR"
+
+    - name: Get Commit Ref
+      run: |
+        pwd
+        COMMIT_REF=$(git rev-parse --short $GITHUB_SHA)
+        echo "COMMIT_REF: $COMMIT_REF"
+        echo "COMMIT_REF=$COMMIT_REF" >>$GITHUB_ENV
+        VERSION_NAME="4.7"
+        echo "VERSION_NAME: $VERSION_NAME"
+        echo "VERSION_NAME=$VERSION_NAME" >>$GITHUB_ENV
+        PACKAGE_NAME="hyperion-$VERSION_NAME"
+        echo "PACKAGE_NAME: $PACKAGE_NAME"
+        echo "PACKAGE_NAME=$PACKAGE_NAME" >>$GITHUB_ENV
+
+    - name: Install Packages
+      run: |
+        sudo apt-get install git wget time ncat
+        sudo apt-get install build-essential
+        sudo apt-get install cmake autoconf automake flex gawk m4
+        sudo apt-get install libltdl-dev libtool-bin libcap2-bin libbz2-dev zlib1g-dev
+        #
+        pushd ~
+          pwd
+          git clone https://github.com/wrljet/hercules-helper.git
+          ls -l
+        popd
+
+    - name: Build Regina Rexx (used for testing)
+      run: |
+          which rexx && true
+          export OPT_REGINA_URL="http://www.wrljet.com/ibm360/Regina-REXX-3.6.tar.gz"
+          export OPT_REGINA_TARFILE="Regina-REXX-3.6.tar.gz"
+          export OPT_REGINA_DIR="Regina-REXX-3.6"
+          wget $OPT_REGINA_URL
+          tar xfz "$OPT_REGINA_TARFILE"
+          pwd
+          pushd $OPT_REGINA_DIR
+          ./configure --libdir=/usr/lib
+          ./config.status --config
+          make
+          sudo make install
+          popd
+          echo "Files:"
+          which rexx
+          find /usr/local/include -name 'rexx*.h' 2>&1
+
+    - name: Build External Packages
+      run: |
+        ls
+
+    - name: Configure
+      run: |
+        export TZ='America/New_York'
+        mkdir build && cd build
+        CFLAGS=" -frecord-gcc-switches" ../configure --enable-optimization="-g -g3 -ggdb3 -O3 -march=x86-64-v2" --enable-custom="Built with GitHub Actions" --prefix=/usr/local --enable-regina-rexx
+        ./config.status --config
+
+    - name: Make
+      run: |
+        cd build
+        make clean
+        make -j3
+
+    - name: Run Tests
+      run: |
+        cd build
+        make check
+
+    - name: Install
+      run: |
+        cd build
+        sudo make install
+        #
+        install_prefix=/usr/local
+        sudo setcap 'cap_sys_nice=eip' $install_prefix/bin/hercules
+        sudo setcap 'cap_sys_nice=eip' $install_prefix/bin/herclin
+        sudo setcap 'cap_net_admin+ep' $install_prefix/bin/hercifc
+        #
+
+    - name: Try It Out
+      run: |
+        sudo ldconfig
+        hash -r
+        cd build
+        /usr/local/bin/hercules && true
+
+    - name: List Output
+      run: |
+        cd /usr/local/
+        ls -l
+        # FIXME this takes forever
+        # find -type f -exec md5sum '{}' \;
+
+    - name: Create Release Archive
+      run: |
+        pwd
+        #
+        # Create Fish style release name
+        VERSION=$(./_dynamic_version)
+        #
+        # Remove double quotes and spaces from Fish's version string
+        echo "VERSION (original): $VERSION"
+        VERSION="${VERSION%\"}"
+        echo "VERSION (quotes1): $VERSION"
+        VERSION="${VERSION#\"}"
+        echo "VERSION (quotes2): $VERSION"
+        VERSION="${VERSION//[[:space:]]/}"
+        echo "VERSION (spaces): $VERSION"
+        echo "VERSION=$VERSION" >>$GITHUB_ENV
+        #
+        # Name and create tarball
+        LINUX_TARBALL="Hercules-$VERSION-Ubuntu-x64.tar.gz"
+        echo "LINUX_TARBALL=$LINUX_TARBALL" >>$GITHUB_ENV
+        # FIXME skipping building this tarball
+        #tar cfz $LINUX_TARBALL /usr/local/$PACKAGE_NAME
+
+    - name: Prepare DPKG
+      run: |
+        echo "pwd = $(pwd)"
+        this_dir="$(readlink -f .)"
+        echo "cd = $this_dir"
+        #  echo "Packager script version: $0: $(git describe --long --tags --dirty --always 2>/dev/null)"
+        #  version_info="$0: $(git describe --long --tags --dirty --always)"
+        #
+        hercules_vers="$(./_dynamic_version . VERSION | awk '{sub("-modified","", $0); print}' | sed 's/"//g')"
+        echo "Hercules package version: $hercules_vers"
+        #
+        SCRIPT_PATH=~/hercules-helper
+        echo "SCRIPT_PATH=$SCRIPT_PATH"
+        #SCRIPT_DIR="$(dirname $SCRIPT_PATH)"
+        SCRIPT_DIR=~/hercules-helper
+        echo "SCRIPT_DIR=$SCRIPT_DIR"
+        #
+        dpkg_src="$SCRIPT_DIR/packagers/debian/$PACKAGE_NAME"   # hercules-helper/packagers/debian/hyperion-4.4
+        echo "dpkg_src=$dpkg_src"
+        #
+        sudo rm -rf ./$PACKAGE_NAME
+        cp -R $dpkg_src $PACKAGE_NAME/
+        sudo cp ./$PACKAGE_NAME/DEBIAN/control ./$PACKAGE_NAME/DEBIAN/control.orig
+        # must 'sudo sh -c' to get the redirection to run as root
+        sudo sh -c "sed 's/Version:.*$/Version: $hercules_vers/' ./$PACKAGE_NAME/DEBIAN/control.orig > ./$PACKAGE_NAME/DEBIAN/control"
+        #
+        sudo sh -c "sed 's/Architecture:.*$/Architecture: amd64/' ./$PACKAGE_NAME/DEBIAN/control.orig > ./$PACKAGE_NAME/DEBIAN/control"
+        #
+        cat ./$PACKAGE_NAME/DEBIAN/control
+        #
+        echo "Copy everything locally; correct libs dir"
+        #
+        # Display what got built and installed
+        # FIXME this takes forever
+        #ls -R --format=horizontal /usr/local/bin
+        #
+        pushd $PACKAGE_NAME >/dev/null;
+        sudo rm -rf usr
+        sudo mkdir -p ./usr/local/bin
+        # sudo cp -R /usr/local/ ./usr/local/
+        sudo cp /usr/local/bin/cckd2ckd ./usr/local/bin
+        sudo cp /usr/local/bin/cckd642ckd ./usr/local/bin
+        sudo cp /usr/local/bin/cckdcdsk ./usr/local/bin
+        sudo cp /usr/local/bin/cckdcdsk64 ./usr/local/bin
+        sudo cp /usr/local/bin/cckdcomp ./usr/local/bin
+        sudo cp /usr/local/bin/cckdcomp64 ./usr/local/bin
+        sudo cp /usr/local/bin/cckddiag ./usr/local/bin
+        sudo cp /usr/local/bin/cckddiag64 ./usr/local/bin
+        sudo cp /usr/local/bin/cckdmap ./usr/local/bin
+        sudo cp /usr/local/bin/cckdswap ./usr/local/bin
+        sudo cp /usr/local/bin/cckdswap64 ./usr/local/bin
+        sudo cp /usr/local/bin/cfba2fba ./usr/local/bin
+        sudo cp /usr/local/bin/cfba642fba ./usr/local/bin
+        sudo cp /usr/local/bin/ckd2cckd ./usr/local/bin
+        sudo cp /usr/local/bin/ckd2cckd64 ./usr/local/bin
+        sudo cp /usr/local/bin/convto64 ./usr/local/bin
+        sudo cp /usr/local/bin/dasdcat ./usr/local/bin
+        sudo cp /usr/local/bin/dasdconv ./usr/local/bin
+        sudo cp /usr/local/bin/dasdconv64 ./usr/local/bin
+        sudo cp /usr/local/bin/dasdcopy ./usr/local/bin
+        sudo cp /usr/local/bin/dasdcopy64 ./usr/local/bin
+        sudo cp /usr/local/bin/dasdinit ./usr/local/bin
+        sudo cp /usr/local/bin/dasdinit64 ./usr/local/bin
+        sudo cp /usr/local/bin/dasdisup ./usr/local/bin
+        sudo cp /usr/local/bin/dasdlist ./usr/local/bin
+        sudo cp /usr/local/bin/dasdload ./usr/local/bin
+        sudo cp /usr/local/bin/dasdload64 ./usr/local/bin
+        sudo cp /usr/local/bin/dasdls ./usr/local/bin
+        sudo cp /usr/local/bin/dasdpdsu ./usr/local/bin
+        sudo cp /usr/local/bin/dasdseq ./usr/local/bin
+        sudo cp /usr/local/bin/dasdser ./usr/local/bin
+        sudo cp /usr/local/bin/dmap2hrc ./usr/local/bin
+        sudo cp /usr/local/bin/fba2cfba ./usr/local/bin
+        sudo cp /usr/local/bin/fba2cfba64 ./usr/local/bin
+        sudo cp /usr/local/bin/hercifc ./usr/local/bin
+        sudo cp /usr/local/bin/herclin ./usr/local/bin
+        sudo cp /usr/local/bin/hercules ./usr/local/bin
+        sudo cp /usr/local/bin/hetget ./usr/local/bin
+        sudo cp /usr/local/bin/hetinit ./usr/local/bin
+        sudo cp /usr/local/bin/hetmap ./usr/local/bin
+        sudo cp /usr/local/bin/hetupd ./usr/local/bin
+        sudo cp /usr/local/bin/maketape ./usr/local/bin
+        sudo cp /usr/local/bin/regina ./usr/local/bin
+        sudo cp /usr/local/bin/regina-config ./usr/local/bin
+        sudo cp /usr/local/bin/rexx ./usr/local/bin
+        sudo cp /usr/local/bin/rxqueue ./usr/local/bin
+        sudo cp /usr/local/bin/rxstack ./usr/local/bin
+        sudo cp /usr/local/bin/tapecopy ./usr/local/bin
+        sudo cp /usr/local/bin/tapemap ./usr/local/bin
+        sudo cp /usr/local/bin/tapesplt ./usr/local/bin
+        sudo cp /usr/local/bin/tfprint ./usr/local/bin
+        sudo cp /usr/local/bin/tfswap ./usr/local/bin
+        sudo cp /usr/local/bin/txt2card ./usr/local/bin
+        sudo cp /usr/local/bin/vmfplc2 ./usr/local/bin
+        #
+        sudo mkdir -p ./usr/local/lib/hercules
+        sudo cp -R /usr/local/lib/hercules/* ./usr/local/lib/hercules
+        sudo cp /usr/local/lib/libhdt3420_not_mod.la ./usr/local/lib/
+        sudo cp /usr/local/lib/libhdt3420_not_mod.so ./usr/local/lib/
+        sudo cp /usr/local/lib/libhercd.la ./usr/local/lib/
+        sudo cp /usr/local/lib/libhercd.so ./usr/local/lib/
+        sudo cp /usr/local/lib/libherc.la ./usr/local/lib/
+        sudo cp /usr/local/lib/libhercs.la ./usr/local/lib/
+        sudo cp /usr/local/lib/libherc.so ./usr/local/lib/
+        sudo cp /usr/local/lib/libhercs.so ./usr/local/lib/
+        sudo cp /usr/local/lib/libherct.la ./usr/local/lib/
+        sudo cp /usr/local/lib/libherct.so ./usr/local/lib/
+        sudo cp /usr/local/lib/libhercu.la ./usr/local/lib/
+        sudo cp /usr/local/lib/libhercu.so ./usr/local/lib/
+        #
+        sudo cp -R /usr/local/share/hercules/ ./usr/local/share/
+        #
+        #sudo mv ./usr/local/lib/hercules/* ./usr/local/lib
+        #
+        #sudo mkdir -p ./usr/local/lib
+        #
+        #sudo cp /usr/local/lib/libh* ./usr/local/lib
+        #sudo cp -R /usr/local/lib/hercules ./usr/local/lib/hercules
+        echo
+        pwd
+        ls
+        ls -R --format=horizontal ./usr/local
+        echo
+        popd
+        #
+        sudo chown root:root -R ./$PACKAGE_NAME
+        #
+        echo "Delete the temporary 'make install' dir"
+        sudo rm -rf /usr/local/$PACKAGE_NAME
+        #
+        echo "Create the Debian package"
+        pwd
+        dpkg -b ./$PACKAGE_NAME
+        LINUX_DEBNAME="Hercules-$VERSION-amd64.deb"
+        echo "LINUX_DEBNAME=$LINUX_DEBNAME" >>$GITHUB_ENV
+        mv "$PACKAGE_NAME.deb" $LINUX_DEBNAME
+        ls -lh $LINUX_DEBNAME
+
+    - name: Test install the new dpkg deb
+      run: |
+        echo "pwd = $(pwd)"
+        echo "dpkg --install $LINUX_DEBNAME"
+        sudo dpkg --install $LINUX_DEBNAME
+        echo
+        # FIXME -dev is in 'control' file
+        echo "dpkg -L ..."
+        dpkg -L "$PACKAGE_NAME-dev"
+        echo
+        #
+        echo "hash -r and which"
+        hash -r
+        which hercules
+        hercules --version
+        #
+        echo "dpkg-deb -f $LINUX_DEBNAME"
+        dpkg-deb -f "$LINUX_DEBNAME"
+        #
+        echo "dpkg-deb -s $LINUX_DEBNAME"
+        # FIXME
+        dpkg -s "$PACKAGE_NAME-dev"
+        #
+        echo "dpkg-deb -l $PACKAGE_NAME-dev"
+        # FIXME
+        dpkg -l "$PACKAGE_NAME-dev"
+        #
+
+    - name: Create dpkg sha256 
+      run: |
+        curl -sL "$LINUX_DEBNAME" | shasum -a 256 | cut -d " " -f 1
+
+    - name: Upload dpkg
+      uses: actions/upload-artifact@v2
+      with:
+        path: "${{env.LINUX_DEBNAME}}"
+        name: "release.zips"
+
+########
+  build-macos:
+
+    runs-on: macOS-12 # Monterey
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+
+    steps:
+    - uses: actions/checkout@v3.3.0
+      with:
+        # Number of commits to fetch. 0 indicates all history for all branches and tags.
+        # Default: 1
+        fetch-depth: 0
+
+    - name: Get Commit Ref
+      run: |
+        echo "pwd: $(pwd)"
+        COMMIT_REF=$(git rev-parse --short $GITHUB_SHA)
+        echo "COMMIT_REF: $COMMIT_REF"
+        echo "COMMIT_REF=$COMMIT_REF" >>$GITHUB_ENV
+        ls -l
+
+    - name: Install Packages
+      run: |
+        brew install cmake
+        brew install sha3sum
+
+    - name: Build
+      run: |
+        uname -a
+        export TZ='America/New_York'
+        pwd # /Users/runner/work/hyperion/hyperion
+        pushd /Users/runner/work/hyperion
+        git clone https://github.com/wrljet/hercules-helper.git
+        ls -l
+        #
+        GIT_REPO_EXTPKGS="https://github.com/SDL-Hercules-390"
+        #
+        rm -rf extpkgs
+        mkdir extpkgs
+        pushd extpkgs
+        #
+        git clone $GIT_REPO_EXTPKGS/crypto crypto
+        git clone $GIT_REPO_EXTPKGS/decNumber decNumber
+        git clone $GIT_REPO_EXTPKGS/SoftFloat SoftFloat
+        git clone $GIT_REPO_EXTPKGS/telnet telnet
+        #
+        popd # extpkgs
+        echo "pwd: $(pwd)"
+        #
+        # ./hercules-helper/hercules-buildall.sh --help
+        ./hercules-helper/hercules-buildall.sh --auto --homebrew --no-clone --flavor=sdl-hyperion --no-bashrc --prefix=/usr/local
+        popd
+        echo "pwd: $(pwd)"
+        #
+        # Release names are of the form:
+        # SDL-Hercules-390 build 4.7.0.11032-SDL-DEV-g4f007805
+        #
+        # Figure out the Hercules version string
+        #
+        SDL_VERSION=$(./_dynamic_version)
+        #
+        # Remove double quotes and spaces from Fish's version string
+        #
+        SDL_VERSION="${SDL_VERSION%\"}"
+        SDL_VERSION="${SDL_VERSION#\"}"
+        SDL_VERSION="${SDL_VERSION//[[:space:]]/}"
+        echo "SDL_VERSION: $SDL_VERSION"
+        echo "SDL_VERSION=$SDL_VERSION" >>$GITHUB_ENV
+        #
+        #------------------------------------------------------------------------------
+        # Invoke shell script to dynamically define version variables
+        #------------------------------------------------------------------------------
+        VERS_MAJ=$(./_dynamic_version . VERS_MAJ)
+        VERS_INT=$(./_dynamic_version . VERS_INT)
+        VERS_MIN=$(./_dynamic_version . VERS_MIN)
+        VERS_BLD=$(./_dynamic_version . VERS_BLD)
+        DYNAMIC_VERSION=$(./_dynamic_version . VERSION)
+        #
+        echo "VERS_MAJ=$VERS_MAJ"
+        echo "VERS_INT=$VERS_INT"
+        echo "VERS_MIN=$VERS_MIN"
+        echo "VERS_BLD=$VERS_BLD"
+        echo "DYNAMIC_VERSION=$DYNAMIC_VERSION"
+        #
+        echo "pwd: $(pwd)"
+        #
+        # Build artifacts are now in /usr/local{bin,lib,share}
+        # Copy them to ~/sdl-hercules-binaries-macos
+        #
+        find /usr/local -name hercules 2>&1 | grep hercules
+        #
+        echo "ls -ld ~: $(ls -ld ~)"
+        #
+        # /usr/local/bin/
+        mkdir -p ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/cckd2ckd   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/cckd642ckd ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/cckdcdsk   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/cckdcdsk64 ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/cckdcomp   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/cckdcomp64 ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/cckddiag   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/cckddiag64 ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/cckdmap    ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/cckdswap   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/cckdswap64 ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/cfba2fba   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/cfba642fba ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/ckd2cckd   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/ckd2cckd64 ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/convto64   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdcat    ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdconv   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdconv64 ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdcopy   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdcopy64 ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdinit   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdinit64 ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdisup   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdlist   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdload   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdload64 ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdls     ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdpdsu   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdseq    ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dasdser    ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/dmap2hrc   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/fba2cfba   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/fba2cfba64 ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/hercifc    ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/herclin    ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/hercules   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/hetget     ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/hetinit    ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/hetmap     ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/hetupd     ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/maketape   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/tapecopy   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/tapemap    ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/tapesplt   ~/sdl-hercules-binaries-macos/bin
+        cp /usr/local/bin/vmfplc2    ~/sdl-hercules-binaries-macos/bin
+        # cp /usr/local/bin/voldsext.cmd  ~/sdl-hercules-binaries-macos/bin
+        #
+        # /usr/local/lib/
+        mkdir -p ~/sdl-hercules-binaries-macos/lib
+        cp -r /usr/local/lib/hercules              ~/sdl-hercules-binaries-macos/lib
+        cp /usr/local/lib/libhdt3420_not_mod.dylib ~/sdl-hercules-binaries-macos/lib
+        cp /usr/local/lib/libhdt3420_not_mod.la    ~/sdl-hercules-binaries-macos/lib
+        cp /usr/local/lib/libherc.dylib            ~/sdl-hercules-binaries-macos/lib
+        cp /usr/local/lib/libherc.la               ~/sdl-hercules-binaries-macos/lib
+        cp /usr/local/lib/libhercd.dylib           ~/sdl-hercules-binaries-macos/lib
+        cp /usr/local/lib/libhercd.la              ~/sdl-hercules-binaries-macos/lib
+        cp /usr/local/lib/libhercs.dylib           ~/sdl-hercules-binaries-macos/lib
+        cp /usr/local/lib/libhercs.la              ~/sdl-hercules-binaries-macos/lib
+        cp /usr/local/lib/libherct.dylib           ~/sdl-hercules-binaries-macos/lib
+        cp /usr/local/lib/libherct.la              ~/sdl-hercules-binaries-macos/lib
+        cp /usr/local/lib/libhercu.dylib           ~/sdl-hercules-binaries-macos/lib
+        cp /usr/local/lib/libhercu.la              ~/sdl-hercules-binaries-macos/lib
+        #
+        # /usr/local/share
+        mkdir -p ~/sdl-hercules-binaries-macos/share
+        cp -r /usr/local/share/hercules ~/sdl-hercules-binaries-macos/share
+        #
+        mkdir -p ~/sdl-hercules-binaries-macos/share/man/man1
+        mkdir -p ~/sdl-hercules-binaries-macos/share/man/man4
+        cp /usr/local/share/man/man1/cckddiag.1  ~/sdl-hercules-binaries-macos/share/man/man1
+        cp /usr/local/share/man/man1/dasdseq.1   ~/sdl-hercules-binaries-macos/share/man/man1
+        cp /usr/local/share/man/man1/vmfplc2.1   ~/sdl-hercules-binaries-macos/share/man/man1
+        cp /usr/local/share/man/man4/cckd.4      ~/sdl-hercules-binaries-macos/share/man/man4
+        #
+        #
+        #echo "*************************************"
+        #echo "pwd: $(pwd)"
+        #ls -a
+        echo "*************************************"
+        echo "pwd: $(pwd)"
+        echo "Update \$VERSION to \$NEW_TAG and create GitHub release"
+        #
+        git status
+        #
+        # Get highest current tag number
+        VERSION=$(git describe --abbrev=0 --tags)
+        echo "git describe --abbrev=0 --tags = $VERSION"
+        #
+        echo "Old Version: $VERSION"
+        #
+        # Replace . with space so can split into an array
+        VERSION_BITS=(${VERSION//./ })
+        #
+        #get number parts and increase last one by 1
+        VNUM1=${VERSION_BITS[0]}
+        VNUM2=${VERSION_BITS[1]}
+        VNUM3=${VERSION_BITS[2]}
+        VNUM1=$(echo $VNUM1 | sed 's/v//')
+        #
+        # Check for #major or #minor in commit message and increment the relevant version number
+        MAJOR=$(git log --format=%B ${VERSION}..HEAD --oneline | grep '#major' || true)
+        MINOR=$(git log --format=%B ${VERSION}..HEAD --oneline | grep '#minor' || true)
+        echo "MAJOR=$MAJOR"
+        echo "MINOR=$MINOR"
+        #
+        if [ "$MAJOR" ]; then
+            echo "Update major version"
+            VNUM1=$((VNUM1+1))
+            VNUM2=0
+            VNUM3=0
+        elif [ "$MINOR" ]; then
+            echo "Update minor version"
+            VNUM2=$((VNUM2+1))
+            VNUM3=0
+        else
+            echo "Update patch version"
+            VNUM3=$((VNUM3+1))
+        fi
+        #
+        echo "*************************************"
+        echo "pwd: $(pwd)"
+        #
+        # Make up the binaries tarball
+        echo "pwd: $(pwd)"
+        ARTIFACT_DIR=$(pwd)
+        echo "ARTIFACT_DIR=$ARTIFACT_DIR" >>$GITHUB_ENV
+        pushd ~
+        # Dir name inside binaries tarball
+        # e.g. sdl-hercules-binaries-macOS/
+        echo "pwd: $(pwd)"
+        ls -lh ~
+        echo "*************************************"
+        # rm -rf ~/sdl-hercules-binaries-macOS/
+        # cp -R ~/sdl-hercules-binaries-macOS/ sdl-hercules-binaries-macOS/
+        #
+        rm -rf sdl-hercules-binaries-macOS/.git
+        tar cfz $ARTIFACT_DIR/Hercules-$SDL_VERSION-macOS.tar.gz sdl-hercules-binaries-macOS
+        ls -lh $ARTIFACT_DIR 
+        echo "*************************************"
+        #
+        # Examine the tarball
+        #
+        echo "tar tvfz | (head && tail)"
+        tar tvfz $ARTIFACT_DIR/Hercules-$SDL_VERSION-macOS.tar.gz | (head && tail)
+        #
+        popd
+        #------------------------------------------------------------------------------
+        #
+        # Create new formula (with new tag)
+        #
+        echo "Step: Create new formula (with new tag \$NEW_TAG):"
+        #
+        # ~/work/hyperion/hyperion to ~/work/hyperion
+        pushd .. 
+        echo "pwd: $(pwd)"
+        ls -lh .
+        #
+        # Update release tag in URL
+        cp hyperion/packagers/macOS/Homebrew/sdl-hercules-develop.rb sdl-hercules-develop.rb.old
+        #
+        # URL to binaries tarball is of this form:
+        # https://github.com/wrljet/hyperion/releases/download/4.7.0.11167-SDL-DEV-g6aec5b66/sdl-hercules-binaries-macOS-4.7.0.11167-SDL-DEV-g6aec5b66.tar.gz
+        #
+        grep url hyperion/packagers/macOS/Homebrew/sdl-hercules-develop.rb
+        gsed -i -e "s/releases\/download\/.*\"$/releases\/download\/$SDL_VERSION\/Hercules-$SDL_VERSION-macOS.tar.gz\"/g" hyperion/packagers/macOS/Homebrew/sdl-hercules-develop.rb
+        #
+        cat hyperion/packagers/macOS/Homebrew/sdl-hercules-develop.rb
+        #
+        # Update formula (download release and get sha256)
+        rm -f /usr/local/Homebrew/Library/Taps/homebrew/homebrew-core/Formula/sdl-hercules-binaries-macOS.rb
+        #
+        # Get new checksum into the formula
+        #
+        SHA256=$(shasum -a 256 $ARTIFACT_DIR/Hercules-$SDL_VERSION-macOS.tar.gz)
+        echo "New sha256: $SHA256"
+        SHA256=${SHA256%% *}
+        echo "First word of sha256sum: ${SHA256%% *}"
+        #
+        # Edit the sha256 into the .rb
+        gsed -i -e "s/  sha256 \"[0-9a-f]\+\"/  sha256 \"$SHA256\"/" hyperion/packagers/macOS/Homebrew/sdl-hercules-develop.rb
+        #
+        head hyperion/packagers/macOS/Homebrew/sdl-hercules-develop.rb
+        cp hyperion/packagers/macOS/Homebrew/sdl-hercules-develop.rb hyperion/packagers/macOS/Homebrew/Hercules-$SDL_VERSION-macOS.rb
+        #
+        popd
+
+    - name: Upload macOS tarball
+      uses: actions/upload-artifact@v2
+      with:
+        name: "release.zips"
+        path: "${{env.ARTIFACT_DIR}}/Hercules-${{env.SDL_VERSION}}-macOS.tar.gz"
+
+    - name: Upload Homebrew formula
+      uses: actions/upload-artifact@v2
+      with:
+        name: "release.zips"
+        path: "packagers/macOS/Homebrew/Hercules-*.rb"
+
+########
+  build-windows:
+
+    runs-on: windows-2022 # Windows Server 2022
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+
+    steps:
+    - uses: actions/checkout@v3.3.0
+      with:
+        # Number of commits to fetch. 0 indicates all history for all branches and tags.
+        # Default: 1
+        fetch-depth: 0
+
+    - name: Build System Info
+      run: |
+        echo 'Building on Windows Not Implemented Yet'
+        echo '$psversiontable...'
+        $psversiontable
+        echo 'get-computerinfo...'
+        get-computerinfo
+        echo "---"
+        echo "GITHUB_WORKSPACE: $env:GITHUB_WORKSPACE"
+
+    - name: Get Commit Ref
+      run: |
+        echo "GITHUB_WORKSPACE: $env:GITHUB_WORKSPACE"
+        #
+        # git rev-parse --short $env:GITHUB_SHA
+        $env:COMMIT_REF = (git rev-parse --short $env:GITHUB_SHA)
+        echo "COMMIT_REF: $env:COMMIT_REF"
+        echo "COMMIT_REF=$env:COMMIT_REF" >>$env:GITHUB_ENV
+
+    - name: Git Clones
+      run: |
+        pushd ..
+          dir
+          git clone https://github.com/wrljet/hercules-helper-windows.git
+          # git clone -b develop https://github.com/SDL-Hercules-390/hyperion.git
+          dir
+          mkdir hyperion\winbuild
+          cd hyperion\winbuild
+          #
+          $ZIPFILE = "ZLIB1-1.2.11-bin-lib-inc-vc2008-x86-x64.zip"
+          $URL = "http://www.softdevlabs.com/downloads/$ZIPFILE"
+          $OutFile = "$ZIPFILE"
+          Invoke-WebRequest -URI $URL -OutFile $OutFile
+          Expand-Archive -Path $ZIPFILE -DestinationPath "zlib"
+          #
+          $ZIPFILE ="BZIP2-1.0.6-bin-lib-inc-vc2008-x86-x64.zip"
+          $URL = "http://www.softdevlabs.com/downloads/$ZIPFILE"
+          $OutFile = "$ZIPFILE"
+          Invoke-WebRequest -URI $URL -OutFile $OutFile
+          Expand-Archive -Path $ZIPFILE -DestinationPath "bzip2"
+          #
+          $ZIPFILE = "PCRE-6.4.1-bin-lib-inc-vc2008-x86-x64.zip"
+          $URL = "http://www.softdevlabs.com/downloads/$ZIPFILE"
+          $OutFile = "$ZIPFILE"
+          Invoke-WebRequest -URI $URL -OutFile $OutFile
+          Expand-Archive -Path $ZIPFILE -DestinationPath "pcre"
+          #
+          # D:\a\hyperion\hyperion\winbuild
+          dir
+          #
+        popd
+        dir
+
+    - name: Command Shell
+      shell: cmd
+      run: |
+        dir
+        dir ..
+        echo GITHUB_SHA: %GITHUB_SHA%
+        set "git_hash=-gHHHHHHH"
+        for /f %%a in ('git rev-parse --short HEAD') do set "COMMIT_REF=%%a"
+        echo GIT_HASH: %COMMIT_REF%
+        ::
+        pushd ..
+          dir
+        ::
+          rem dir "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build"
+        ::
+          set HERCULES_HELPER_BUILD_DIR=%cd%\hyperion
+          echo HERCULES_HELPER_BUILD_DIR: %HERCULES_HELPER_BUILD_DIR%
+        ::
+          set HERCULES_HELPER_VCVARS_CMD=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat
+        ::
+          pushd "%HERCULES_HELPER_BUILD_DIR%"
+            set HERCULES_BUILD_DIR=%cd%\msvc.AMD64.bin
+            call "%HERCULES_HELPER_VCVARS_CMD%"
+            :: set /P dummy=
+            ::
+            call _dynamic_version.cmd
+            :: Remove double quotes and spaces from Fish's version string
+            set VERSION=%VERSION:"=%
+            set VERSION=%VERSION: =%
+            echo Build version info: %VERSION%
+            echo %VERSION% > ..\DYNAMIC_VERSION
+            ::
+            call makefile.bat RETAIL-X64 makefile.msvc 8 -title "*** GitHub Actions Build ***" -a
+          popd
+        popd
+
+    - name: Create Release Archive
+      run: |
+        echo "COMMIT_REF: $env:COMMIT_REF"
+        #
+        $env:DYNAMIC_VERSION = (Get-Content "../DYNAMIC_VERSION").Trim()
+        echo "DYNAMIC_VERSION: $env:DYNAMIC_VERSION"
+        echo "DYNAMIC_VERSION=$env:DYNAMIC_VERSION" >>$env:GITHUB_ENV
+        #
+        $env:WINDOWS_ZIPFILE="Hercules-$env:DYNAMIC_VERSION-win64.zip"
+        echo "WINDOWS_ZIPFILE=$env:WINDOWS_ZIPFILE" >>$env:GITHUB_ENV
+        echo $env:WINDOWS_ZIPFILE
+        dir
+        echo " "
+        echo "dir .. before zip"
+        dir ..
+        pushd ..
+          # Create a zip file with the contents of msvc.AMD64.bin
+          Compress-Archive -Path hyperion\msvc.AMD64.bin\*.* -DestinationPath "hyperion\$env:WINDOWS_ZIPFILE"
+          echo "dir .. after zip"
+          dir
+        popd
+
+    - name: Set Title
+      run: |
+        echo "Tag: latest-${{github.ref_name}}"
+        # if grep -q "develop" <<< "${{github.ref_name}}"; then
+          $env:TITLE="Hercules Development Snapshot"
+        # else
+        #  $env:TITLE="Hercules"
+        # fi
+        echo "Title: $env:TITLE"
+        echo "TITLE=$env:TITLE" >>$env:GITHUB_ENV
+        dir
+        echo "dir .."
+        dir ..
+
+    - name: Upload build
+      uses: actions/upload-artifact@v2
+      with:
+        path: "${{env.WINDOWS_ZIPFILE}}"
+        name: "release.zips"
+
+########
+  build-arm64:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        arch: [aarch64]
+        include:
+        - arch: aarch64
+          cpu: cortex-a53
+          base_image: raspios_lite_arm64:2022-04-04
+          cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
+
+    steps:
+    - name: pguyot ARM Runner
+      uses: pguyot/arm-runner-action@v2
+      with:
+        image_additional_mb: 4096
+        base_image: ${{ matrix.base_image }}
+        cpu: ${{ matrix.cpu }}
+        cpu_info: ${{ matrix.cpu_info }}
+        copy_artifact_dest: /tmp
+        copy_artifact_path: uploads
+        commands: |
+            test `uname -m` = ${{ matrix.arch }}
+            grep Model /proc/cpuinfo
+            #
+            echo "uname -r: $(uname -r)"
+            echo "uname -a: $(uname -a)"
+            os_name=$(uname -s)
+            echo "OS Type          : $os_name"
+            machine=$(uname -m)
+            #echo "Machine Arch     : $machine"
+            os_version_memory_size="$(free -m | awk '/^Mem:/{print $2}')"
+            echo "Memory Total (MB): $os_version_memory_size"
+            echo "Memory Free  (MB): $(free -m | awk '/^Mem:/{print $4}')"
+            #
+            OS_BITFLAG="32"
+            #
+            case "${os_name}" in
+               *hp-hpux*)
+                  ;;
+               *ibm-aix*)
+                  rc=`lsconf -k | grep -c 64-bit`
+                  if test $rc -eq 1; then
+                     OS_BITFLAG="64"
+                  fi
+                  ;;
+               i*86*solaris*)
+                  ;;
+               *solaris*)
+                  rc=`isainfo -v | grep -c 64-bit`
+                  if test $rc -eq 1; then
+                     OS_BITFLAG="64"
+                  fi
+                  ;;
+               sparc*sunos*)
+                  ;;
+               Linux)
+                  mach="`uname -m`"
+                  if test "$mach" = "aarch64" -o "$mach" = "x86_64" -o "$mach" = "ia86" -o "$mach" = "alpha" -o "$mach" = "ppc64" -o "$mach" = "ppc64le" -o "$mach" = "s390x" -o "$mach" = "e2k" -o "$mach" = "riscv64" ; then
+                     OS_BITFLAG="64"
+                  fi
+                  ;;
+               FreeBSD|OpenBSD|NetBSD)
+                  mach="`uname -m`"
+                  if test "$mach" = "amd64" -o "$mach" = "sparc64" ; then
+                     OS_BITFLAG="64"
+                  fi
+                  ;;
+               Darwin)
+                  os_osx_64bit=`sysctl hw.cpu64bit_capable | cut -f2 -d' '`
+                  if test $os_osx_64bit -eq 1; then
+                     OS_BITFLAG="64"
+                  fi
+                  ;;
+            esac
+            #
+            echo "Platform Bitness : $OS_BITFLAG"
+            #
+            export OPT_BUILD_DIR=/hyperion/herctest
+            export OPT_INSTALL_DIR="/usr/local"
+            #
+            export SCRIPT_DIR=/hyperion/hercules-helper
+            export OPT_REGINA_DIR="Regina-REXX-3.6"
+            export OPT_REGINA_TARFILE="Regina-REXX-3.6.tar.gz"
+            export OPT_REGINA_URL="http://www.wrljet.com/ibm360/Regina-REXX-3.6.tar.gz"
+            export GIT_REPO_HERCULES="https://github.com/SDL-Hercules-390/hyperion.git"
+            export GIT_BRANCH_HERCULES="develop"
+            export GIT_COMMIT_HERCULES=""
+            export GIT_REPO_EXTPKGS="https://github.com/SDL-Hercules-390"
+            export GIT_BRANCH_EXTPKGS=""
+            #
+            # reports: /hyperion
+            echo "pwd = $(pwd)"
+            #
+            ls -lh
+            ls -lh /
+            #
+            # Create output directory
+            mkdir -p uploads
+            #
+            sudo apt-get update
+            sudo apt-get install -y git wget time ncat
+            sudo apt-get install -y build-essential
+            sudo apt-get install -y cmake autoconf automake flex gawk m4
+            sudo apt-get install -y libltdl-dev libtool-bin libcap2-bin libbz2-dev zlib1g-dev
+            #
+            # Clone Hercules-Helper
+            git clone https://github.com/wrljet/hercules-helper.git
+            ls -l
+            #
+            cd hercules-helper
+            echo "Script version: $SCRIPT_DIR/$(basename $0): $(git describe --long --tags --dirty --always 2>/dev/null)"
+            # add hercules-helper version to the build description
+            HERCULES_HELPER_VERSION="$(git describe --long --tags --dirty --always 2>/dev/null)"
+            cd -
+            #
+            mkdir -p $OPT_INSTALL_DIR
+            mkdir -p $OPT_BUILD_DIR/hyperion
+            cd $OPT_BUILD_DIR
+            rm -rf hyperion || true
+            #
+            which rexx && true
+            #export OPT_REGINA_URL="http://www.wrljet.com/ibm360/Regina-REXX-3.6.tar.gz"
+            #export OPT_REGINA_TARFILE="Regina-REXX-3.6.tar.gz"
+            #export OPT_REGINA_DIR="Regina-REXX-3.6"
+            wget $OPT_REGINA_URL
+            tar xfz "$OPT_REGINA_TARFILE"
+            pwd
+            # pushd $OPT_REGINA_DIR
+            cd $OPT_REGINA_DIR
+            #
+            echo "Patching Regina 3.6 source for aarch64"
+            patch -u configure -i "$SCRIPT_DIR/patches/regina-rexx-3.6.patch"
+            echo "Replacing config.{guess,sub}"
+            cp "$SCRIPT_DIR/patches/config.guess" ./common/
+            cp "$SCRIPT_DIR/patches/config.sub" ./common/
+            #
+            ./configure --libdir=/usr/lib
+            ./config.status --config
+            make
+            sudo make install
+            #popd
+            cd -
+            #
+            ldconfig
+            echo "Files:"
+            which rexx
+            find /usr/local/include -name 'rexx*.h' 2>&1
+            #
+            # git clone required repos
+            cd $OPT_BUILD_DIR
+            rm -rf hyperion || true
+            git clone -b $GIT_BRANCH_HERCULES $GIT_REPO_HERCULES
+            #
+            cd $OPT_BUILD_DIR
+            rm -rf extpkgs
+            mkdir extpkgs
+            cd extpkgs/
+            rm -rf *
+            git clone $GIT_REPO_EXTPKGS/crypto
+            git clone $GIT_REPO_EXTPKGS/decNumber
+            git clone $GIT_REPO_EXTPKGS/SoftFloat
+            git clone $GIT_REPO_EXTPKGS/telnet
+            #
+            cd $OPT_BUILD_DIR/hyperion
+            #
+            # Check program versions
+            util/bldlvlck
+            #
+            # Prepare and build extpkgs
+            cd $OPT_BUILD_DIR/extpkgs
+            rm -rf lib/
+            #
+            # We do this to match the way it's done in Hercules configure
+            target_cpu=$(uname -m)
+            case "$target_cpu" in
+                i*86|x86*)
+                    hc_cv_cpu_arch=x86
+                    hc_cv_pkg_lib_subdir=""
+                    ;;
+                amd64*)
+                    hc_cv_cpu_arch=x86
+                    hc_cv_pkg_lib_subdir=""
+                    ;;
+                aarch64*)
+                    hc_cv_cpu_arch=aarch64
+                    hc_cv_pkg_lib_subdir="/aarch64"
+                    ;;
+                arm64*)
+                    hc_cv_cpu_arch=aarch64
+                    hc_cv_pkg_lib_subdir="/aarch64"
+                    ;;
+                arm*)
+                    hc_cv_cpu_arch=arm
+                    hc_cv_pkg_lib_subdir="/arm"
+                    ;;
+                e2k*)
+                    hc_cv_cpu_arch=e2k
+                    hc_cv_pkg_lib_subdir="/e2k"
+                    ;;
+                mips*)
+                    hc_cv_cpu_arch=mips
+                    hc_cv_pkg_lib_subdir="/mips"
+                    ;;
+                ppc*|powerpc*)
+                    hc_cv_cpu_arch=ppc
+                    hc_cv_pkg_lib_subdir="/ppc"
+                    ;;
+                sparc*)
+                    hc_cv_cpu_arch=sparc
+                    hc_cv_pkg_lib_subdir="/sparc"
+                    ;;
+                s390x*)
+                    hc_cv_cpu_arch=s390x
+                    hc_cv_pkg_lib_subdir="/s390x"
+                    ;;
+                xscale*)
+                    hc_cv_cpu_arch=xscale
+                    hc_cv_pkg_lib_subdir="/xscale"
+                    ;;
+                riscv64*)
+                    hc_cv_cpu_arch=riscv64
+                    hc_cv_pkg_lib_subdir="/riscv64"
+                    ;;
+                *)
+                    hc_cv_cpu_arch=unknown
+                    hc_cv_pkg_lib_subdir="/unknown"
+                    ;;
+            esac
+            #
+            for pkg in crypto decNumber SoftFloat telnet; do
+                echo "Building extpkg: $pkg"
+            #
+                mkdir -p build/${pkg}$OS_BITFLAG.Release
+                cd build/${pkg}$OS_BITFLAG.Release
+            #
+                    # Clear CMake cache in case we've changed the options
+                    rm -f CMakeCache.txt
+            #
+                    # e.g. OPT_CMAKE_DEFINES="-DCMAKE_C_FLAGS_RELWITHDEBINFO=\"-O3 -march=native -g\""
+                    if [ ! -z "$OPT_CMAKE_DEFINES" ] ; then
+                        verbose_msg "Adding CMake defines: $OPT_CMAKE_DEFINES"
+                    fi
+            #
+            #
+                    cmake_cmd= cmake $OPT_CMAKE_DEFINES -D INSTALL_PREFIX=$OPT_BUILD_DIR/extpkgs -DLIB_INSTALL_DIR=lib$hc_cv_pkg_lib_subdir $OPT_BUILD_DIR/extpkgs/$pkg
+            #
+                    echo $cmake_cmd
+                    eval "$cmake_cmd"
+            #
+                    rc=$?
+                    if (( $rc != 0 )); then
+                        echo "ERROR: Cmake has failed! rc=$rc";
+                        echo "ERROR: extpkgs not built";
+                        exit 3
+                    fi
+            #
+                    make clean
+                    make -j 2 all
+                    make install
+                 cd -
+                 pwd
+            done
+            #
+            pwd
+            #
+            mkdir -p $OPT_BUILD_DIR/hyperion/build
+            cd $OPT_BUILD_DIR/hyperion/build
+            #
+            # Configure and build Hercules
+            CFLAGS="-frecord-gcc-switches" ../configure --enable-optimization="-g -g3 -ggdb3 -O3 -march=native" --enable-extpkgs=$OPT_BUILD_DIR/extpkgs --prefix=$OPT_INSTALL_DIR --enable-custom="Built for you with Hercules-Helper (version: $HERCULES_HELPER_VERSION)" --enable-regina-rexx
+            #
+            ./config.status --config
+            #
+            make clean
+            time make -j 2 2>&1
+            #
+            # FIXME 'make check' fails
+            # time make check
+            #
+            sudo make install
+            #
+            sudo setcap 'cap_sys_nice=eip' $OPT_INSTALL_DIR/bin/hercules
+            sudo setcap 'cap_sys_nice=eip' $OPT_INSTALL_DIR/bin/herclin
+            sudo setcap 'cap_net_admin+ep' $OPT_INSTALL_DIR/bin/hercifc
+            #
+            readelf -p .GCC.command.line $OPT_INSTALL_DIR/bin/hercules > hercules-gcc-options.txt
+            #
+            # Prepare dpkg
+            #
+            cd $OPT_BUILD_DIR/hyperion
+            echo "pwd = $(pwd)"
+            #
+            # Create Fish style release name
+            VERSION=$(./_dynamic_version)
+            #
+            # Remove double quotes and spaces from Fish's version string
+            VERSION="${VERSION%\"}"
+            VERSION="${VERSION#\"}"
+            VERSION="$(echo "$VERSION" | tr -d ' ')"
+            echo "VERSION: $VERSION"
+            #
+            COMMIT_REF=$(git rev-parse --short $GITHUB_SHA)
+            echo "COMMIT_REF: $COMMIT_REF"
+            VERSION_NAME="4.7"
+            echo "VERSION_NAME: $VERSION_NAME"
+            PACKAGE_NAME="hyperion-$VERSION_NAME"
+            echo "PACKAGE_NAME: $PACKAGE_NAME"
+            #
+            HERCULES_VERS="$(./_dynamic_version . VERSION | awk '{sub("-modified","", $0); print}' | sed 's/"//g')"
+            echo "Hercules package version: $HERCULES_VERS"
+            #
+            dpkg_src="$SCRIPT_DIR/packagers/debian/$PACKAGE_NAME"   # hercules-helper/packagers/debian/hyperion-4.4
+            echo "dpkg_src=$dpkg_src"
+            #
+            sudo rm -rf ./$PACKAGE_NAME
+            cp -R $dpkg_src $PACKAGE_NAME/
+            sudo cp ./$PACKAGE_NAME/DEBIAN/control ./$PACKAGE_NAME/DEBIAN/control.orig
+            #
+            # Update the version info in the dpkg control file
+            # Must 'sudo sh -c' to get the redirection to run as root
+            sudo sh -c "sed 's/Version:.*$/Version: $HERCULES_VERS/' ./$PACKAGE_NAME/DEBIAN/control.orig > ./$PACKAGE_NAME/DEBIAN/control"
+            #
+            # Update the CPU architecture info in the dpkg control file
+            # Must 'sudo sh -c' to get the redirection to run as root
+            sudo sh -c "sed 's/Architecture:.*$/Architecture: arm64/' ./$PACKAGE_NAME/DEBIAN/control.orig > ./$PACKAGE_NAME/DEBIAN/control"
+            #
+            cat ./$PACKAGE_NAME/DEBIAN/control
+            #
+            echo "Copy everything locally; correct libs dir"
+            #
+            # Display what got built and installed
+            # FIXME this takes forever
+            #ls -R --format=horizontal /usr/local/bin
+            #
+            cd $PACKAGE_NAME
+            sudo rm -rf usr
+            sudo mkdir -p ./usr/local/bin
+            # sudo cp -R /usr/local/ ./usr/local/
+            sudo cp /usr/local/bin/cckd2ckd ./usr/local/bin
+            sudo cp /usr/local/bin/cckd642ckd ./usr/local/bin
+            sudo cp /usr/local/bin/cckdcdsk ./usr/local/bin
+            sudo cp /usr/local/bin/cckdcdsk64 ./usr/local/bin
+            sudo cp /usr/local/bin/cckdcomp ./usr/local/bin
+            sudo cp /usr/local/bin/cckdcomp64 ./usr/local/bin
+            sudo cp /usr/local/bin/cckddiag ./usr/local/bin
+            sudo cp /usr/local/bin/cckddiag64 ./usr/local/bin
+            sudo cp /usr/local/bin/cckdmap ./usr/local/bin
+            sudo cp /usr/local/bin/cckdswap ./usr/local/bin
+            sudo cp /usr/local/bin/cckdswap64 ./usr/local/bin
+            sudo cp /usr/local/bin/cfba2fba ./usr/local/bin
+            sudo cp /usr/local/bin/cfba642fba ./usr/local/bin
+            sudo cp /usr/local/bin/ckd2cckd ./usr/local/bin
+            sudo cp /usr/local/bin/ckd2cckd64 ./usr/local/bin
+            sudo cp /usr/local/bin/convto64 ./usr/local/bin
+            sudo cp /usr/local/bin/dasdcat ./usr/local/bin
+            sudo cp /usr/local/bin/dasdconv ./usr/local/bin
+            sudo cp /usr/local/bin/dasdconv64 ./usr/local/bin
+            sudo cp /usr/local/bin/dasdcopy ./usr/local/bin
+            sudo cp /usr/local/bin/dasdcopy64 ./usr/local/bin
+            sudo cp /usr/local/bin/dasdinit ./usr/local/bin
+            sudo cp /usr/local/bin/dasdinit64 ./usr/local/bin
+            sudo cp /usr/local/bin/dasdisup ./usr/local/bin
+            sudo cp /usr/local/bin/dasdlist ./usr/local/bin
+            sudo cp /usr/local/bin/dasdload ./usr/local/bin
+            sudo cp /usr/local/bin/dasdload64 ./usr/local/bin
+            sudo cp /usr/local/bin/dasdls ./usr/local/bin
+            sudo cp /usr/local/bin/dasdpdsu ./usr/local/bin
+            sudo cp /usr/local/bin/dasdseq ./usr/local/bin
+            sudo cp /usr/local/bin/dasdser ./usr/local/bin
+            sudo cp /usr/local/bin/dmap2hrc ./usr/local/bin
+            sudo cp /usr/local/bin/fba2cfba ./usr/local/bin
+            sudo cp /usr/local/bin/fba2cfba64 ./usr/local/bin
+            sudo cp /usr/local/bin/hercifc ./usr/local/bin
+            sudo cp /usr/local/bin/herclin ./usr/local/bin
+            sudo cp /usr/local/bin/hercules ./usr/local/bin
+            sudo cp /usr/local/bin/hetget ./usr/local/bin
+            sudo cp /usr/local/bin/hetinit ./usr/local/bin
+            sudo cp /usr/local/bin/hetmap ./usr/local/bin
+            sudo cp /usr/local/bin/hetupd ./usr/local/bin
+            sudo cp /usr/local/bin/maketape ./usr/local/bin
+            sudo cp /usr/local/bin/regina ./usr/local/bin
+            sudo cp /usr/local/bin/regina-config ./usr/local/bin
+            sudo cp /usr/local/bin/rexx ./usr/local/bin
+            sudo cp /usr/local/bin/rxqueue ./usr/local/bin
+            sudo cp /usr/local/bin/rxstack ./usr/local/bin
+            sudo cp /usr/local/bin/tapecopy ./usr/local/bin
+            sudo cp /usr/local/bin/tapemap ./usr/local/bin
+            sudo cp /usr/local/bin/tapesplt ./usr/local/bin
+            sudo cp /usr/local/bin/tfprint ./usr/local/bin
+            sudo cp /usr/local/bin/tfswap ./usr/local/bin
+            sudo cp /usr/local/bin/txt2card ./usr/local/bin
+            sudo cp /usr/local/bin/vmfplc2 ./usr/local/bin
+            #
+            sudo mkdir -p ./usr/local/lib/hercules
+            sudo cp -R /usr/local/lib/hercules/* ./usr/local/lib/hercules
+            sudo cp /usr/local/lib/libhdt3420_not_mod.la ./usr/local/lib/
+            sudo cp /usr/local/lib/libhdt3420_not_mod.so ./usr/local/lib/
+            sudo cp /usr/local/lib/libhercd.la ./usr/local/lib/
+            sudo cp /usr/local/lib/libhercd.so ./usr/local/lib/
+            sudo cp /usr/local/lib/libherc.la ./usr/local/lib/
+            sudo cp /usr/local/lib/libhercs.la ./usr/local/lib/
+            sudo cp /usr/local/lib/libherc.so ./usr/local/lib/
+            sudo cp /usr/local/lib/libhercs.so ./usr/local/lib/
+            sudo cp /usr/local/lib/libherct.la ./usr/local/lib/
+            sudo cp /usr/local/lib/libherct.so ./usr/local/lib/
+            sudo cp /usr/local/lib/libhercu.la ./usr/local/lib/
+            sudo cp /usr/local/lib/libhercu.so ./usr/local/lib/
+            #
+            sudo cp -R /usr/local/share/hercules/ ./usr/local/share/
+            #
+            echo
+            pwd
+            ls
+            ls -R --format=horizontal ./usr/local
+            echo
+            cd -
+            pwd
+            # /hyperion/herctest/hyperion/hyperion-4.7
+            #
+            sudo chown root:root -R ./$PACKAGE_NAME
+            #
+            echo "Delete the temporary 'make install' dir"
+            sudo rm -rf /usr/local/$PACKAGE_NAME
+            #
+            echo "Create the Debian package"
+            pwd
+            dpkg -b ./$PACKAGE_NAME
+            LINUX_DEBNAME="Hercules-$VERSION-aarch64.deb"
+            echo "LINUX_DEBNAME=$LINUX_DEBNAME"
+            mv "$PACKAGE_NAME.deb" $LINUX_DEBNAME
+            ls -lh $LINUX_DEBNAME
+            #
+            # Test install the new dpkg deb
+            # pwd = /hyperion/herctest/hyperion
+            echo "pwd = $(pwd)"
+            #
+            # sudo dpkg --install Hercules-4.7.0.11032-SDL-DEV-g4f007805.deb
+            echo "dpkg --install ..."
+            sudo dpkg --install $LINUX_DEBNAME
+            echo
+            # FIXME -dev is in 'control' file
+            echo "dpkg -L ..."
+            dpkg -L "$PACKAGE_NAME-dev"
+            echo
+            #
+            echo "hash -r and which"
+            hash -r
+            which hercules
+            hercules --version
+            #
+            echo "dpkg-deb -f ..."
+            dpkg-deb -f "$LINUX_DEBNAME"
+            #
+            echo "dpkg-deb -s ..."
+            # FIXME
+            dpkg -s "$PACKAGE_NAME-dev"
+            #
+            echo "dpkg-deb -l ..."
+            # FIXME
+            dpkg -l "$PACKAGE_NAME-dev"
+            #
+            # Create dpkg sha256
+            echo "Create dpkg sha256"
+            curl -sL "$LINUX_DEBNAME" | shasum -a 256 | cut -d " " -f 1
+            #
+            # Copy .deb to upload directory
+            mkdir -p /hyperion/uploads
+            cp $LINUX_DEBNAME /hyperion/uploads
+            cp $LINUX_DEBNAME uploads
+
+    - name: Inspect results
+      run: |
+        # reports: /home/runner/work/hyperion/hyperion
+        pwd
+        ls -lh /home/runner/work
+        #ls -lh /home/runner/work/hyperion
+        #ls -lh /home/runner/work/hyperion/hyperion
+        #ls -lh /tmp
+        ls -lh /tmp/uploads
+        #
+        TITLE="Hercules Development Snapshot"
+        echo "Title: $TITLE"
+        echo "TITLE=$TITLE" >>$GITHUB_ENV
+        #
+        VERSION="123"
+        echo "Version: $VERSION"
+        echo "VERSION=$VERSION" >>$GITHUB_ENV
+
+    - name: Upload dpkg
+      uses: actions/upload-artifact@v2
+      with:
+        path: "/tmp/uploads/Hercules*.deb"
+        name: "release.zips"
+
+### END ###
