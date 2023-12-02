@@ -174,7 +174,7 @@ jobs:
         # Search for -- ## Commits and stick in our new readme info
         gh release view "${{env.SDL_VERSION}}" > foo
         #
-        cat foo | tr '\n' '\r' | sed -e 's/.*--\r##/Note: macOS Homebrew formula must be renamed to sdl-hercules-develop.rb\r\r--\r##/' | tr '\r' '\n' > goo
+        cat foo | tr '\n' '\r' | sed -e 's/.*--\r##/## Note: macOS Homebrew formula must be renamed to sdl-hercules-develop.rb\r\r##/' | tr '\r' '\n' > goo
         #
         gh release edit "${{env.SDL_VERSION}}" --notes-file goo
 
