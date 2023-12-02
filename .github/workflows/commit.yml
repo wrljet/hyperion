@@ -29,6 +29,7 @@ on:
     branches:
       - "develop"
       - "workflow"
+      - "actions"
 
 jobs:
   build-release:
@@ -58,6 +59,9 @@ jobs:
         if grep -q "develop" <<< "${{github.ref_name}}"; then
           TITLE="Hercules Development Snapshot"
         elif grep -q "workflow" <<< "${{github.ref_name}}"; then
+          TITLE="Hercules Development Snapshot"
+          TITLE="Hercules"
+        elif grep -q "actions" <<< "${{github.ref_name}}"; then
           TITLE="Hercules Development Snapshot"
           TITLE="Hercules"
         fi
