@@ -169,7 +169,7 @@ jobs:
         #
         # Search for -- ## Commits and stick in our new readme info
         VIEW=$(gh release view "${{env.SDL_VERSION}}")
-        echo $VIEW | sed -e 's/--\n##/FIXME FIXME\n\n--\n##/' 
+        echo $VIEW | tr '\n' '\r' | sed -e 's/--\r##/FIXME FIXME\r\r--\r##/' tr '\r' '\n'
 
 
 ########
