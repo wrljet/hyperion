@@ -10,7 +10,8 @@
 #include "hstdinc.h"
 
 /* jbs 10/27/2007 added _SOLARIS_ */
-#if !defined(__SOLARIS__)
+/* wrl 12/26/2022 added _MACH_    */
+#if !defined(__SOLARIS__) && !defined(__MACH__)
 
 #include "hercules.h"
 #include "ctcadpt.h"
@@ -7943,4 +7944,4 @@ END_DEVICE_SECTION
   #pragma optimize( "", on )            // restore previous settings
 #endif
 
-#endif /* !defined(__SOLARIS__)  jbs 10/2007 10/2007 */
+#endif /* !defined(__SOLARIS__) && !defined(__MACH__) jbs 10/27/2007, wrl 12/26/2022 */

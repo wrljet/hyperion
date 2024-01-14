@@ -338,6 +338,34 @@
 #define SCANDIR_CONST_STRUCT_DIRENT     /* define if scandir uses
                                            const for struct dirent   */
 
+/*-------------------------------------------------------------------*/
+/* Hard-coded GNU Hurd/Mach-specific features and options...             */
+/*-------------------------------------------------------------------*/
+#elif defined(__MACH__)            /* GNU Linux options         */
+
+#define DLL_IMPORT              extern
+#define DLL_EXPORT
+#define INL_DLL_IMPORT
+#define INL_DLL_EXPORT          extern
+#define TUNTAP_IFF_RUNNING_NEEDED       /* Needed by tuntap driver?? */
+#define OPTION_SCSI_TAPE                /* SCSI tape support         */
+#undef  OPTION_SCSI_ERASE_TAPE          /* (NOT supported)           */
+#undef  OPTION_SCSI_ERASE_GAP           /* (NOT supported)           */
+#define OPTION_FBA_BLKDEVICE            /* FBA block device support  */
+#define MAX_DEVICE_THREADS          0   /* (0 == unlimited)          */
+#define MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" and "fOo" unique)  */
+
+#if defined( HAVE_FORK )
+  #define HOW_TO_IMPLEMENT_SH_COMMAND     USE_FORK_API_FOR_SH_COMMAND
+#else
+  #define HOW_TO_IMPLEMENT_SH_COMMAND     USE_ANSI_SYSTEM_API_FOR_SH_COMMAND
+#endif
+#define SET_CONSOLE_CURSOR_SHAPE_METHOD   CURSOR_SHAPE_VIA_SPECIAL_LINUX_ESCAPE
+#undef  OPTION_EXTCURS                  /* Normal cursor handling    */
+#define SCANDIR_CONST_STRUCT_DIRENT     /* define if scandir uses
+                                           const for struct dirent   */
+
+#define PATH_MAX  1024 /* WRL FIXME */
 
 /*-------------------------------------------------------------------*/
 /* Hard-coded AIX-specific features and options...      -- bozy      */
