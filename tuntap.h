@@ -11,6 +11,30 @@
 
 #include "hercules.h"
 
+/* WRL FIXME */
+//---------------------------------------------------------------------------------------
+// Fish: 2013-02-21: Added struct rtentry to tt32if.h for convenience.
+
+struct rtentry      // (rtentry must be defined before 'hercifc.h')
+{
+    unsigned long int   rt_pad1;
+    struct sockaddr     rt_dst;         // Target address.
+    struct sockaddr     rt_gateway;     // Gateway addr (RTF_GATEWAY)
+    struct sockaddr     rt_genmask;     // Target network mask (IP)
+    unsigned short int  rt_flags;
+    short int           rt_pad2;
+    unsigned long int   rt_pad3;
+    unsigned char       rt_tos;
+    unsigned char       rt_class;
+    short int           rt_pad4;
+    short int           rt_metric;      // +1 for binary compatibility!
+    char *              rt_dev;         // Forcing the device at add.
+    unsigned long int   rt_mtu;         // Per route MTU/Window.
+    unsigned long int   rt_window;      // Window clamping.
+    unsigned short int  rt_irtt;        // Initial RTT.
+};
+
+
 #if !defined( OPTION_W32_CTCI )
   #include "hifr.h"             // struct in6_ifreq, struct hifr
 #else
